@@ -1,7 +1,7 @@
 import oracledb # biblioteca da oracle
 import os      # usado na limpeza da tela
 import random
-
+import fc
 # Estabelece a conexão com o banco de dados Oracle.
 
 # **Observações:**
@@ -35,7 +35,7 @@ def main ():
         while repeticao == 1:
             try:
              opcao = int(input("Digite a opção desejada: "))
-             limpar_tela()
+             fc.limpar_tela()
              repeticao = 0
             except:
                 print("ERRO! TENTE NOVAMENTE!")
@@ -73,103 +73,6 @@ def criar_tabela():
         print(f"Erro ao acessar o banco de dados: {e}")
         return
     
-def dado_nvarchar2(tamanho,nome,not_null):
-    """
-    Lê Dado do tipo nvarchar2 e valida se ele está dentro dos critérios.
-    recebe tamanho para fazer a verificação se ultrapassa o tamanho maximo.
-    o nome do dado, e not_null se for igual a 1 significado que é um campo obrigatório
-
-    Retorna:
-    str: O dado.
-
-    """
-    repeticao = 1
-    while(repeticao == 1):
-    
-        try:
-            dado = input(f"Digite {nome} do produto : ")
-            limpar_tela()
-
-            # validação de tamanho
-            if   len(dado) >= tamanho:
-                raise ValueError(f"Use no máximo {tamanho} caracteres.")
-            
-            # verifica se a string esta vazia
-            elif len(dado) <= 0 and not_null == 1:
-                raise NameError("Campo Obrigatório!!")
-        
-            else:
-                # Nome válido 
-                repeticao = 0
-
-        except ValueError as e:
-            print("ERRO : ",e)
-
-        except NameError as e:
-            print ("ERRO :",e)
-
-        except:
-            print("ERRO!")
-
-    return dado
-
-def dado_number(tamanho,nome):
-    """
-    Leitura de dados do tipo float.
-
-    Retorna:
-    str: dado float.
-    """
-    repeticao = 1
-
-    while repeticao == 1:
-        try:
-            dado = float(input(f"Digite {nome} do produto : "))
-            limpar_tela()
-            # número válido
-            repeticao = 0
-
-        except ValueError:
-            print (f"ERRO: {nome} inválido. Digite um número.")
-
-        except NameError as e:
-            print(f"ERRO: {e}")
-
-        except OverflowError:
-            print(f"Erro: {nome} muito grande. Digite um número menor.")
-
-
-    return dado
-
-def calcular_preco_venda(custo_produto, taxas_venda, margem_lucro):
-  """
-  Calcula o preço de venda de um produto, quando tiver a interface iremos adaptar para que o,
-  usuário tenha mais possibilidade
-
-  Argumentos:
-    custo_produto (float): Custo do produto.
-    taxas_venda (float): Taxas de venda (ex: imposto, frete).
-    margem_lucro (float): Margem de lucro desejada (ex: 0.2 para 20%).
-
-    
-
-  Retorna:
-    float: Preço de venda calculado.
-  """
-
-  # Converte a margem de lucro em porcentagem para um valor decimal
-  margem_lucro_decimal = margem_lucro / 100
-
-  # Calcula o lucro desejado
-  lucro_desejado = custo_produto * margem_lucro_decimal
-
-  # Soma as taxas de venda ao custo do produto
-  custo_total = custo_produto + taxas_venda
-
-  # Calcula o preço de venda
-  preco_venda = custo_total / (1 - margem_lucro_decimal)
-
-  return preco_venda
 
 def cadastrar_produto():
 
@@ -184,25 +87,25 @@ def cadastrar_produto():
 
   
     # Nome do produto
-    nome = dado_nvarchar2(100, "o nome", 1)
+    nome = fc.dado_nvarchar2(100, "o nome", 1)
 
     # Descrição do produto
-    descricao = dado_nvarchar2(255, "a descrição", 0)
+    descricao = fc.dado_nvarchar2(255, "a descrição", 0)
 
     # Geração do código de barras
     codigo_de_barras = gerar_codigo_barra()
 
     # Preço de compra do produto
-    preco_de_compra = dado_number(13, "o preco de compra")
+    preco_de_compra = fc.dado_number(13, "o preco de compra")
 
     # Cálculo do preço de venda
-    preco_de_venda = calcular_preco_venda(preco_de_compra, taxas, 20)
+    preco_de_venda = fc.calcular_preco_venda(preco_de_compra, taxas, 20)
 
     # Quantidade de unidades do produto
-    unidades = int(dado_number(13, "unidades"))
+    unidades = int(fc.dado_number(13, "unidades"))
 
     # Nome do fornecedor do produto
-    fornecedor = dado_nvarchar2(100, "O Fornecedor",0)
+    fornecedor = fc.dado_nvarchar2(100, "O Fornecedor",0)
 
 
 
@@ -226,7 +129,7 @@ def cadastrar_produto():
 
         print("Produto cadastrado com sucesso!")
         input = ("Pressione ENTER para continuar.\n ")
-        limpar_tela()
+        fc.limpar_tela()
 
     except oracledb.DatabaseError as e:
         print(f"Erro ao acessar o banco de dados: {e}")
@@ -244,14 +147,7 @@ Unidades: {row[5]}
 Fornecedor: {row[6]}
 """)
     input("Aperte ENTER para continuar!\n")
-    limpar_tela()
-
-def limpar_tela():
-    # Usado para a limpeza da tela do sistema operacional windowns e linux.
-    if os.name =='nt':
-        os.system('cls') # windowns
-    else:
-        os.system('clear') # linux
+    fc.limpar_tela()
 
 def gerar_codigo_barra():
     """
@@ -276,7 +172,7 @@ def gerar_codigo_barra():
             return gerar_codigo_barra()
     except:
 
-        limpar_tela()
+        fc.limpar_tela()
 
     return codigo
 
