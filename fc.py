@@ -1,5 +1,6 @@
 import os
 import random
+from tkinter import messagebox
 
 
 def limpar_tela():
@@ -74,7 +75,7 @@ def dado_nvarchar2(tamanho,nome,not_null):
     o nome do dado, e not_null se for igual a 1 significado que é um campo obrigatório
 
     Retorna:
-    str: O dado.
+    TRUE se atender todos os critérios
 
     """
     repeticao = 1
@@ -106,3 +107,48 @@ def dado_nvarchar2(tamanho,nome,not_null):
             print("ERRO!")
 
     return dado
+
+def validar_nvarchar2(campo,tam,not_null):
+    """
+    valida se o dado nvarchar2  está dentro dos critérios.
+    recebe tamanho para fazer a verificação se ultrapassa o tamanho maximo.
+    o nome do dado, e not_null se for igual a 1 significado que é um campo obrigatório
+
+    Retorna:
+    str: O dado.
+
+    """
+    if not_null == 1:
+        if not campo:
+            messagebox.showerror("Erro", "Por favor, preencha o campo 'Nome'.")
+            return False
+
+    if len(campo) > tam:
+        messagebox.showerror(f"Erro", "O campo {campo} deve ter no máximo {tam} caracteres.")
+        return False
+
+    return True
+
+
+def validar_number(campo, valor, not_null):
+    """
+    valida se o dado number  está dentro dos critérios.
+    
+    o nome do dado, e not_null se for igual a 1 significado que é um campo obrigatório
+
+    Retorna:
+    TRUE se atender todos os critérios
+    """
+    valor = valor.replace(',', '.') # substitui a virgula pelo ponto antes de converter para float
+
+    if not_null == 1:
+        if not valor:
+            messagebox.showerror("Erro", f"Por favor, preencha o campo '{campo}'.")
+            return False
+    try:
+        numero = float(valor)
+    except ValueError:
+        messagebox.showerror("Erro", f"O campo '{campo}' deve ser um número.")
+        return False
+    
+    return True
