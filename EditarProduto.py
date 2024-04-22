@@ -25,4 +25,16 @@ import oracledb
 connection = oracledb.connect(user="SYSTEM", password="senha", host="localhost", port=1521)
 cursor = connection.cursor()
 
-def editar_produto()
+class EditarProduto():
+    def __init__(self, root_parameter):
+        self.root = root_parameter
+        self.root.title("Editar Produto")
+        self.editar_design()
+        self.root.mainloop()
+
+    def tela_calculo_venda(self):
+        # Crie uma nova janela
+        self.root.iconify()
+        self.nova_janela = tk.Toplevel(self.root)
+        self.nova_janela.title("Calculadora de Preço de Venda")
+        self.nova_janela.protocol("WM_DELETE_WINDOW", self.fechar_janela_calculo)
