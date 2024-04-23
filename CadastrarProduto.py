@@ -35,60 +35,60 @@ class CadastrarProduto():
         self.root = root_parameter
         self.root.title("Cadastro de Produtos")
         self.root.geometry("450x270")
-        self.root.resizable(False, False)
+        self.root.resizable(False, True)
+        self.root.maxheight = 150
         self.cadastro_design()
         self.root.mainloop()
 
-    def calcular_preco_venda(self,ca, entry_iv, entry_cf, entry_co, entry_ml, entry_cv, entry_preco_venda):
-        self.ca = float(ca.get())
+    def calcular_preco_venda(self):
+        self.ca = float(self.ca.get())
         print(self.ca, " Custo do produto")
-        self.iv = float(entry_iv.get())
+        self.iv = float(self.entry_iv.get())
         print(self.iv, " Imposto")
-        self.cf = float(entry_cf.get())
+        self.cf = float(self.entry_cf.get())
         print(self.cf, "custo fixo")
-        self.co = float(entry_co.get())
+        self.co = float(self.entry_co.get())
         print(self.co, "custo operacionail")
-        self.ml = float(entry_ml.get())
+        self.ml = float(self.entry_ml.get())
         print(self.ml, " Margem lucro")
-        self.cv = float(entry_cv.get())
+        self.cv = float(self.entry_cv.get())
         print(self.cv, "preço venda")
         self.preco_venda = self.ca / (1 - (self.iv + self.cf + self.co + self.ml + self.cv) / 100)
         try:
-            entry_preco_venda.config(state="normal")
-            entry_preco_venda.delete(0, tk.END)
-            entry_preco_venda.insert(0, "{:.2f}".format(self.preco_venda))
-            entry_preco_venda.config(state="readonly")
+            self.entry_preco_venda.config(state="normal")
+            self.entry_preco_venda.delete(0, tk.END)
+            self.entry_preco_venda.insert(0, "{:.2f}".format(self.preco_venda))
+            self.entry_preco_venda.config(state="readonly")
         except:
-            entry_preco_venda.config(state="normal")
-            entry_preco_venda.delete(0, tk.END)
-            entry_preco_venda.insert(0, "Erro")
-            entry_preco_venda.config(state="readonly")
+            self.entry_preco_venda.config(state="normal")
+            self.entry_preco_venda.delete(0, tk.END)
+            self.entry_preco_venda.insert(0, "Erro")
+            self.entry_preco_venda.config(state="readonly")
 
 
-    def calcular_percentuais(self,entry_rendimento_mensal, entry_custo_fixo, entry_custo_mercadoria, entry_custo_operacional,
-                             entry_percentual_custo_fixo, entry_percentual_custo_operacional):
+    def calcular_percentuais(self):
         # função auxiliar para o calcular_porcentagem_custo fazer o calculo 2x
-        self.calcular_porcentagem_custo(entry_rendimento_mensal, entry_custo_fixo, entry_percentual_custo_fixo,
+        self.calcular_porcentagem_custo(self.entry_rendimento_mensal, self.entry_custo_fixo, self.entry_percentual_custo_fixo,
                                    "rendimento mensal")
-        self.calcular_porcentagem_custo(entry_custo_mercadoria, entry_custo_operacional, entry_percentual_custo_operacional,
+        self.calcular_porcentagem_custo(self.entry_custo_mercadoria, self.entry_custo_operacional, self.entry_percentual_custo_operacional,
                                    "custo total das mercadorias")
 
-    def calcular_porcentagem_custo(referencia, custo, entry_resultado, tipo):
+    def calcular_porcentagem_custo(self):
         try:
-            valor_referencia = float(referencia.get())
-            valor_custo = float(custo.get())
-            percentual_custo = (valor_custo / valor_referencia) * 100
-            entry_resultado.config(state="normal")
-            entry_resultado.delete(0, tk.END)
-            entry_resultado.insert(0, "{:.2f}".format(percentual_custo))
-            entry_resultado.config(state="readonly")
+            self.valor_referencia = float(self.referencia.get())
+            self.valor_custo = float(self.custo.get())
+            self.percentual_custo = (self.valor_custo / self.valor_referencia) * 100
+            self.entry_resultado.config(state="normal")
+            self.entry_resultado.delete(0, tk.END)
+            self.entry_resultado.insert(0, "{:.2f}".format(self.percentual_custo))
+            self.entry_resultado.config(state="readonly")
 
         except ValueError:
             # Se valores inseridos não forem números
-            entry_resultado.config(state="normal")
-            entry_resultado.delete(0, tk.END)
-            entry_resultado.insert(0, "Erro")
-            entry_resultado.config(state="readonly")
+            self.entry_resultado.config(state="normal")
+            self.entry_resultado.delete(0, tk.END)
+            self.entry_resultado.insert(0, "Erro")
+            self.entry_resultado.config(state="readonly")
 
 
     def salvar_preco_venda(self, preco_venda, label_preco_venda_principal):
@@ -112,59 +112,59 @@ class CadastrarProduto():
         # Campos de entrada custo fixo
         label_rendimento_mensal = ctk.CTkLabel(frame, text="Rendimento bruto Mensal:")
         label_rendimento_mensal.grid(row=0, column=0, sticky=tk.W)
-        entry_rendimento_mensal = ctk.CTkEntry(frame, width=15)
-        entry_rendimento_mensal.grid(row=0, column=1, sticky=tk.W)
+        self.entry_rendimento_mensal = ctk.CTkEntry(frame, width=15)
+        self.entry_rendimento_mensal.grid(row=0, column=1, sticky=tk.W)
 
         label_custo_fixo = ctk.CTkLabel(frame, text="Custo Fixo:")
         label_custo_fixo.grid(row=1, column=0, sticky=tk.W)
-        entry_custo_fixo = ctk.CTkEntry(frame, width=15)
-        entry_custo_fixo.grid(row=1, column=1, sticky=tk.W)
+        self.entry_custo_fixo = ctk.CTkEntry(frame, width=15)
+        self.entry_custo_fixo.grid(row=1, column=1, sticky=tk.W)
 
         label_custo_mercadoria = ctk.CTkLabel(frame, text="Custo total das Mercadorias:")
         label_custo_mercadoria.grid(row=0, column=4, sticky=tk.W)
-        entry_custo_mercadoria = ctk.CTkEntry(frame, width=15)
-        entry_custo_mercadoria.grid(row=0, column=5, sticky=tk.W)
+        self.entry_custo_mercadoria = ctk.CTkEntry(frame, width=15)
+        self.entry_custo_mercadoria.grid(row=0, column=5, sticky=tk.W)
 
         label_custo_operacional = ctk.CTkLabel(frame, text="Custo operacional:")
         label_custo_operacional.grid(row=1, column=4, sticky=tk.W)
-        entry_custo_operacional = ctk.CTkEntry(frame, width=15)
-        entry_custo_operacional.grid(row=1, column=5, sticky=tk.W)
+        self.entry_custo_operacional = ctk.CTkEntry(frame, width=15)
+        self.entry_custo_operacional.grid(row=1, column=5, sticky=tk.W)
 
         label_percentual_custo_fixo = ctk.CTkLabel(frame, text="Percentual do Custo Fixo:")
         label_percentual_custo_fixo.grid(row=5, column=0, sticky=tk.W)
-        entry_percentual_custo_fixo = ctk.CTkEntry(frame, width=15, state="readonly")
-        entry_percentual_custo_fixo.grid(row=5, column=1, sticky=tk.W)
+        self.entry_percentual_custo_fixo = ctk.CTkEntry(frame, width=15, state="readonly")
+        self.entry_percentual_custo_fixo.grid(row=5, column=1, sticky=tk.W)
 
         label_percentual_custo_operacional = ctk.CTkLabel(frame, text="Percentual do Custo Operacional:")
         label_percentual_custo_operacional.grid(row=6, column=0, sticky=tk.W)
-        entry_percentual_custo_operacional = ctk.CTkEntry(frame, width=15, state="readonly")
-        entry_percentual_custo_operacional.grid(row=6, column=1, sticky=tk.W)
+        self.entry_percentual_custo_operacional = ctk.CTkEntry(frame, width=15, state="readonly")
+        self.entry_percentual_custo_operacional.grid(row=6, column=1, sticky=tk.W)
 
         # Botão para calcular os percentuais
         btn_calcular = ctk.CTkButton(frame, text="Calcular Percentuais",
-                                  command=lambda: self.calcular_percentuais(entry_rendimento_mensal, entry_custo_fixo,
-                                                                       entry_custo_mercadoria, entry_custo_operacional,
-                                                                       entry_percentual_custo_fixo,
-                                                                       entry_percentual_custo_operacional))
+                                  command=lambda: self.calcular_percentuais(self.entry_rendimento_mensal, self.entry_custo_fixo,
+                                                                       self.entry_custo_mercadoria, self.entry_custo_operacional,
+                                                                       self.entry_percentual_custo_fixo,
+                                                                       self.entry_percentual_custo_operacional))
         btn_calcular.grid(row=3, columnspan=4, pady=10)
 
         # impostos
         label_custo_imposto = ctk.CTkLabel(frame, text="Percentual do imposto:")
         label_custo_imposto.grid(row=7, column=0, sticky=tk.W)
-        entry_custo_imposto = ctk.CTkEntry(frame, width=15)
-        entry_custo_imposto.grid(row=7, column=1, sticky=tk.W)
+        self.entry_custo_imposto = ctk.CTkEntry(frame, width=15)
+        self.entry_custo_imposto.grid(row=7, column=1, sticky=tk.W)
 
         # impostos
         label_custo_produto = ctk.CTkLabel(frame, text="Custo do Produto:")
         label_custo_produto.grid(row=8, column=0, sticky=tk.W)
-        entry_custo_produto = ctk.CTkEntry(frame, width=15)
-        entry_custo_produto.grid(row=8, column=1, sticky=tk.W)
+        self.entry_custo_produto = ctk.CTkEntry(frame, width=15)
+        self.entry_custo_produto.grid(row=8, column=1, sticky=tk.W)
 
         # comissão de venda
         label_comissao_venda = ctk.CTkLabel(frame, text="Percentual da Comissão Venda:")
         label_comissao_venda.grid(row=9, column=0, sticky=tk.W)
-        entry_comissao_venda = ctk.CTkEntry(frame, width=15)
-        entry_comissao_venda.grid(row=9, column=1, sticky=tk.W)
+        self.entry_comissao_venda = ctk.CTkEntry(frame, width=15)
+        self.entry_comissao_venda.grid(row=9, column=1, sticky=tk.W)
 
         # Margem de lucro
         label_margem_lucro = ctk.CTkLabel(frame, text="Percentual da Margem de Lucro:")
@@ -183,23 +183,23 @@ class CadastrarProduto():
 
         label_preco_venda = ctk.CTkLabel(frame, text="Preço de Venda:")
         label_preco_venda.grid(row=11, column=0, sticky=tk.W)
-        entry_preco_venda = ctk.CTkEntry(frame, width=15, state="readonly")
-        entry_preco_venda.grid(row=11, column=1, sticky=tk.W)
+        self.entry_preco_venda = ctk.CTkEntry(frame, width=15, state="readonly")
+        self.entry_preco_venda.grid(row=11, column=1, sticky=tk.W)
         btn_calcular = ctk.CTkButton(frame, text="Calcular preço de venda",
-                                  command=lambda: self.calcular_preco_venda(entry_custo_produto, entry_custo_imposto,
-                                                                       entry_percentual_custo_fixo,
-                                                                       entry_percentual_custo_operacional,
-                                                                       entry_margem_lucro, entry_comissao_venda,
-                                                                       entry_preco_venda))
+                                  command=lambda: self.calcular_preco_venda(self.entry_custo_produto, self.entry_custo_imposto,
+                                                                       self.entry_percentual_custo_fixo,
+                                                                       self.entry_percentual_custo_operacional,
+                                                                       self.entry_margem_lucro, self.entry_comissao_venda,
+                                                                       self.entry_preco_venda))
         btn_calcular.grid(row=12, columnspan=4, pady=10)
 
         # Botão "ctk"CTk
         btn_salvar = ctk.CTkButton(frame, text="Salvar",
-                                command=lambda: self.salvar_preco_venda(entry_preco_venda.get(), self.label_preco_venda_principal))
+                                command=lambda: self.salvar_preco_venda(self.entry_preco_venda.get(), self.label_preco_venda_principal))
         btn_salvar.grid(row=15, columnspan=4, pady=10)
 
 
-        entry_preco_venda.get()
+        self.entry_preco_venda.get()
 
     def voltar_tela_principal(self):
         self.root.iconify()
@@ -220,13 +220,13 @@ class CadastrarProduto():
 
         try:
             # Gera string com 13 números aleatórios
-            codigo = "".join(str(random.randint(0, 9)) for _ in range(13))
+            self.codigo = "".join(str(random.randint(0, 9)) for _ in range(13))
 
             # Verifica se o código já existe
             sql = """
             SELECT COUNT(*) FROM tbl_produtos WHERE codigo_de_barra = :codigo_de_barra
             """
-            cursor.execute(sql, {"CODIGO_DE_BARRAS": codigo})
+            cursor.execute(sql, {"CODIGO_DE_BARRAS": self.codigo})
             resultado = cursor.fetchone()[0]
             # se o resultado for maior que 1 então significa que existe
             if resultado > 0:
@@ -237,6 +237,54 @@ class CadastrarProduto():
 
         return self.codigo
 
+
+    def cadastro_design(self):
+        frame = ctk.CTkFrame(self.root)
+        frame.place(relwidth=1, relheight=1)
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_columnconfigure(1, weight=3)
+
+        # Campos de entrada
+        label_nome = ctk.CTkLabel(frame, text="Nome:")
+        label_nome.grid(row=0, column=0, sticky=tk.W, pady=7, padx=15)
+        self.entry_nome = ctk.CTkEntry(frame)
+        self.entry_nome.grid(row=0, column=1,sticky=tk.EW, pady=7, padx=15)
+
+        label_descricao = ctk.CTkLabel(frame, text="Descrição:")
+        label_descricao.grid(row=1, column=0, sticky=tk.W, pady=5, padx=15)
+        self.entry_descricao = ctk.CTkEntry(frame)
+        self.entry_descricao.grid(row=1, column=1,sticky=tk.EW, pady=5, padx=15)
+
+        label_custo_aquisicao = ctk.CTkLabel(frame, text="Custo de Aquisição:")
+        label_custo_aquisicao.grid(row=2, column=0, sticky=tk.W, pady=5, padx=15)
+        self.entry_custo_aquisicao = ctk.CTkEntry(frame)
+        self.entry_custo_aquisicao.grid(row=2,sticky=tk.EW, column=1, pady=5, padx=15)
+
+        label_unidades = ctk.CTkLabel(frame, text="Unidades:")
+        label_unidades.grid(row=3, column=0, sticky=tk.W, pady=5, padx=15)
+        self.entry_unidades = ctk.CTkEntry(frame)
+        self.entry_unidades.grid(row=3, column=1,sticky=tk.EW, pady=5, padx=15)
+
+        label_fornecedor = ctk.CTkLabel(frame, text="Fornecedor:")
+        label_fornecedor.grid(row=4, column=0, sticky=tk.W, pady=5, padx=15)
+        self.combo_fornecedor = ctk.CTkComboBox(frame, state="readonly",values = ["Fornecedor 1", "Fornecedor 2", "Fornecedor 3"])  # Aqui você pode adicionar os fornecedores cadastrados
+        self.combo_fornecedor.grid(row=4, column=1,sticky=tk.EW, pady=5, padx=15)
+
+        label_preco_venda_principal = ctk.CTkLabel(frame, text="Preço de Venda:")
+        label_preco_venda_principal.grid(row=5, column=0, sticky=tk.W, pady=5, padx=15)
+        self.entry_preco_venda_principal = ctk.CTkEntry(frame)
+        self.entry_preco_venda_principal.grid(row=5,sticky=tk.EW, column=1, pady=5, padx=15)
+
+        buttons_frame = ctk.CTkFrame(frame, fg_color="#2b2b2b")
+        buttons_frame.grid_columnconfigure((0, 1), weight=1)
+        buttons_frame.grid(row=6, column=0, columnspan=2, pady=4)
+
+        botao_nova_tela = ctk.CTkButton(buttons_frame, text="Calcular Preço de venda", command=self.tela_calculo_venda)
+        botao_nova_tela.grid(row=0, column=1,padx=5, sticky=tk.W)
+
+        # Botão para cadastrar produto
+        button_cadastrar = ctk.CTkButton(buttons_frame, text="Cadastrar Produto", command=self.cadastrar_produto)
+        button_cadastrar.grid(row=0, column=0,padx=5,sticky=tk.W)
 
     def mostrar_lucro(self,margem_lucro):
         # Função que mostra se a margem de lucro esta boa
@@ -341,55 +389,6 @@ class CadastrarProduto():
         # Mostrar mensagem de sucesso
         messagebox.showinfo("Sucesso", "Produto cadastrado com sucesso!")
 
-
-# Frame para agrupar os campos
-    def cadastro_design(self):
-        frame = ctk.CTkFrame(self.root)
-        frame.place(relwidth=1, relheight=1)
-        frame.grid_columnconfigure(0, weight=1)
-        frame.grid_columnconfigure(1, weight=3)
-
-        # Campos de entrada
-        label_nome = ctk.CTkLabel(frame, text="Nome:")
-        label_nome.grid(row=0, column=0, sticky=tk.W, pady=7, padx=15)
-        entry_nome = ctk.CTkEntry(frame)
-        entry_nome.grid(row=0, column=1,sticky=tk.EW, pady=7, padx=15)
-
-        label_descricao = ctk.CTkLabel(frame, text="Descrição:")
-        label_descricao.grid(row=1, column=0, sticky=tk.W, pady=5, padx=15)
-        entry_descricao = ctk.CTkEntry(frame)
-        entry_descricao.grid(row=1, column=1,sticky=tk.EW, pady=5, padx=15)
-
-        label_custo_aquisicao = ctk.CTkLabel(frame, text="Custo de Aquisição:")
-        label_custo_aquisicao.grid(row=2, column=0, sticky=tk.W, pady=5, padx=15)
-        entry_custo_aquisicao = ctk.CTkEntry(frame)
-        entry_custo_aquisicao.grid(row=2,sticky=tk.EW, column=1, pady=5, padx=15)
-
-        label_unidades = ctk.CTkLabel(frame, text="Unidades:")
-        label_unidades.grid(row=3, column=0, sticky=tk.W, pady=5, padx=15)
-        entry_unidades = ctk.CTkEntry(frame)
-        entry_unidades.grid(row=3, column=1,sticky=tk.EW, pady=5, padx=15)
-
-        label_fornecedor = ctk.CTkLabel(frame, text="Fornecedor:")
-        label_fornecedor.grid(row=4, column=0, sticky=tk.W, pady=5, padx=15)
-        combo_fornecedor = ctk.CTkComboBox(frame, state="readonly",values = ["Fornecedor 1", "Fornecedor 2", "Fornecedor 3"])  # Aqui você pode adicionar os fornecedores cadastrados
-        combo_fornecedor.grid(row=4, column=1,sticky=tk.EW, pady=5, padx=15)
-
-        label_preco_venda_principal = ctk.CTkLabel(frame, text="Preço de Venda:")
-        label_preco_venda_principal.grid(row=5, column=0, sticky=tk.W, pady=5, padx=15)
-        entry_preco_venda_principal = ctk.CTkEntry(frame)
-        entry_preco_venda_principal.grid(row=5,sticky=tk.EW, column=1, pady=5, padx=15)
-
-        buttons_frame = ctk.CTkFrame(frame, fg_color="#2b2b2b")
-        buttons_frame.grid_columnconfigure((0, 1), weight=1)
-        buttons_frame.grid(row=6, column=0, columnspan=2, pady=4)
-
-        botao_nova_tela = ctk.CTkButton(buttons_frame, text="Calcular Preço de venda", command=self.tela_calculo_venda)
-        botao_nova_tela.grid(row=0, column=1,padx=5, sticky=tk.W)
-
-        # Botão para cadastrar produto
-        button_cadastrar = ctk.CTkButton(buttons_frame, text="Cadastrar Produto", command=self.cadastrar_produto)
-        button_cadastrar.grid(row=0, column=0,padx=5,sticky=tk.W)
 
 if __name__ == "__main__":
     root = ctk.CTk()
