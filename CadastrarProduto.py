@@ -5,6 +5,7 @@ from tkinter import messagebox
 from tkinter import StringVar
 import random
 import oracledb
+import customtkinter as ctk
 
 # biblioteca da oracle
 
@@ -24,7 +25,7 @@ import oracledb
 
 # Caso seja a primeira vez Por favor Gere a tabela com o GerarTabela.py
 
-connection = oracledb.connect(user="SYSTEM", password="testador", host="localhost", port="1521")
+connection = oracledb.connect(user="SYSTEM", password="senha", host="localhost", port=1521)
 cursor = connection.cursor()
 
 
@@ -33,6 +34,8 @@ class CadastrarProduto():
     def __init__(self,root_parameter):
         self.root = root_parameter
         self.root.title("Cadastro de Produtos")
+        self.root.geometry("450x270")
+        self.root.resizable(False, False)
         self.cadastro_design()
         self.root.mainloop()
 
@@ -98,47 +101,47 @@ class CadastrarProduto():
     def tela_calculo_venda(self):
         # Crie uma nova janela
         self.root.iconify()
-        self.nova_janela = tk.Toplevel(self.root)
+        self.nova_janela = ctk.CTkToplevel(self.root)
         self.nova_janela.title("Calculadora de Preço de Venda")
         self.nova_janela.protocol("WM_DELETE_WINDOW", self.fechar_janela_calculo)
 
-        # Adicione conteúdo à nova janela
-        frame = ttk.Frame(self.nova_janela, padding="20")
+        # Adicione conteúdo à nova janelactk
+        frame = ctk.CTkFrame(self.nova_janela)
         frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
         # Campos de entrada custo fixo
-        label_rendimento_mensal = ttk.Label(frame, text="Rendimento bruto Mensal:")
+        label_rendimento_mensal = ctk.CTkLabel(frame, text="Rendimento bruto Mensal:")
         label_rendimento_mensal.grid(row=0, column=0, sticky=tk.W)
-        entry_rendimento_mensal = ttk.Entry(frame, width=15)
+        entry_rendimento_mensal = ctk.CTkEntry(frame, width=15)
         entry_rendimento_mensal.grid(row=0, column=1, sticky=tk.W)
 
-        label_custo_fixo = ttk.Label(frame, text="Custo Fixo:")
+        label_custo_fixo = ctk.CTkLabel(frame, text="Custo Fixo:")
         label_custo_fixo.grid(row=1, column=0, sticky=tk.W)
-        entry_custo_fixo = ttk.Entry(frame, width=15)
+        entry_custo_fixo = ctk.CTkEntry(frame, width=15)
         entry_custo_fixo.grid(row=1, column=1, sticky=tk.W)
 
-        label_custo_mercadoria = ttk.Label(frame, text="Custo total das Mercadorias:")
+        label_custo_mercadoria = ctk.CTkLabel(frame, text="Custo total das Mercadorias:")
         label_custo_mercadoria.grid(row=0, column=4, sticky=tk.W)
-        entry_custo_mercadoria = ttk.Entry(frame, width=15)
+        entry_custo_mercadoria = ctk.CTkEntry(frame, width=15)
         entry_custo_mercadoria.grid(row=0, column=5, sticky=tk.W)
 
-        label_custo_operacional = ttk.Label(frame, text="Custo operacional:")
+        label_custo_operacional = ctk.CTkLabel(frame, text="Custo operacional:")
         label_custo_operacional.grid(row=1, column=4, sticky=tk.W)
-        entry_custo_operacional = ttk.Entry(frame, width=15)
+        entry_custo_operacional = ctk.CTkEntry(frame, width=15)
         entry_custo_operacional.grid(row=1, column=5, sticky=tk.W)
 
-        label_percentual_custo_fixo = ttk.Label(frame, text="Percentual do Custo Fixo:")
+        label_percentual_custo_fixo = ctk.CTkLabel(frame, text="Percentual do Custo Fixo:")
         label_percentual_custo_fixo.grid(row=5, column=0, sticky=tk.W)
-        entry_percentual_custo_fixo = ttk.Entry(frame, width=15, state="readonly")
+        entry_percentual_custo_fixo = ctk.CTkEntry(frame, width=15, state="readonly")
         entry_percentual_custo_fixo.grid(row=5, column=1, sticky=tk.W)
 
-        label_percentual_custo_operacional = ttk.Label(frame, text="Percentual do Custo Operacional:")
+        label_percentual_custo_operacional = ctk.CTkLabel(frame, text="Percentual do Custo Operacional:")
         label_percentual_custo_operacional.grid(row=6, column=0, sticky=tk.W)
-        entry_percentual_custo_operacional = ttk.Entry(frame, width=15, state="readonly")
+        entry_percentual_custo_operacional = ctk.CTkEntry(frame, width=15, state="readonly")
         entry_percentual_custo_operacional.grid(row=6, column=1, sticky=tk.W)
 
         # Botão para calcular os percentuais
-        btn_calcular = ttk.Button(frame, text="Calcular Percentuais",
+        btn_calcular = ctk.CTkButton(frame, text="Calcular Percentuais",
                                   command=lambda: self.calcular_percentuais(entry_rendimento_mensal, entry_custo_fixo,
                                                                        entry_custo_mercadoria, entry_custo_operacional,
                                                                        entry_percentual_custo_fixo,
@@ -146,25 +149,25 @@ class CadastrarProduto():
         btn_calcular.grid(row=3, columnspan=4, pady=10)
 
         # impostos
-        label_custo_imposto = ttk.Label(frame, text="Percentual do imposto:")
+        label_custo_imposto = ctk.CTkLabel(frame, text="Percentual do imposto:")
         label_custo_imposto.grid(row=7, column=0, sticky=tk.W)
-        entry_custo_imposto = ttk.Entry(frame, width=15)
+        entry_custo_imposto = ctk.CTkEntry(frame, width=15)
         entry_custo_imposto.grid(row=7, column=1, sticky=tk.W)
 
         # impostos
-        label_custo_produto = ttk.Label(frame, text="Custo do Produto:")
+        label_custo_produto = ctk.CTkLabel(frame, text="Custo do Produto:")
         label_custo_produto.grid(row=8, column=0, sticky=tk.W)
-        entry_custo_produto = ttk.Entry(frame, width=15)
+        entry_custo_produto = ctk.CTkEntry(frame, width=15)
         entry_custo_produto.grid(row=8, column=1, sticky=tk.W)
 
         # comissão de venda
-        label_comissao_venda = ttk.Label(frame, text="Percentual da Comissão Venda:")
+        label_comissao_venda = ctk.CTkLabel(frame, text="Percentual da Comissão Venda:")
         label_comissao_venda.grid(row=9, column=0, sticky=tk.W)
-        entry_comissao_venda = ttk.Entry(frame, width=15)
+        entry_comissao_venda = ctk.CTkEntry(frame, width=15)
         entry_comissao_venda.grid(row=9, column=1, sticky=tk.W)
 
         # Margem de lucro
-        label_margem_lucro = ttk.Label(frame, text="Percentual da Margem de Lucro:")
+        label_margem_lucro = ctk.CTkLabel(frame, text="Percentual da Margem de Lucro:")
         label_margem_lucro.grid(row=10, column=0, sticky=tk.W)
         margem_lucro = StringVar()
         global margem_lucro_status_text
@@ -172,17 +175,17 @@ class CadastrarProduto():
         margem_lucro_status_text.set("...")
         margem_lucro.trace("w", lambda name, index, mode, sv=margem_lucro: self.mostrar_lucro(sv))
         global label_margem_lucro_status
-        label_margem_lucro_status = ttk.Label(frame, textvariable=margem_lucro_status_text)
+        label_margem_lucro_status = ctk.CTkLabel(frame, textvariable=margem_lucro_status_text)
         label_margem_lucro_status.grid(row=10, column=2, sticky=tk.W)
         global entry_margem_lucro
-        entry_margem_lucro = ttk.Entry(frame, width=15, textvariable=margem_lucro)
+        entry_margem_lucro = ctk.CTkEntry(frame, width=15, textvariable=margem_lucro)
         entry_margem_lucro.grid(row=10, column=1, sticky=tk.W)
 
-        label_preco_venda = ttk.Label(frame, text="Preço de Venda:")
+        label_preco_venda = ctk.CTkLabel(frame, text="Preço de Venda:")
         label_preco_venda.grid(row=11, column=0, sticky=tk.W)
-        entry_preco_venda = ttk.Entry(frame, width=15, state="readonly")
+        entry_preco_venda = ctk.CTkEntry(frame, width=15, state="readonly")
         entry_preco_venda.grid(row=11, column=1, sticky=tk.W)
-        btn_calcular = ttk.Button(frame, text="Calcular preço de venda",
+        btn_calcular = ctk.CTkButton(frame, text="Calcular preço de venda",
                                   command=lambda: self.calcular_preco_venda(entry_custo_produto, entry_custo_imposto,
                                                                        entry_percentual_custo_fixo,
                                                                        entry_percentual_custo_operacional,
@@ -190,8 +193,8 @@ class CadastrarProduto():
                                                                        entry_preco_venda))
         btn_calcular.grid(row=12, columnspan=4, pady=10)
 
-        # Botão "Salvar"
-        btn_salvar = ttk.Button(frame, text="Salvar",
+        # Botão "ctk"CTk
+        btn_salvar = ctk.CTkButton(frame, text="Salvar",
                                 command=lambda: self.salvar_preco_venda(entry_preco_venda.get(), self.label_preco_venda_principal))
         btn_salvar.grid(row=15, columnspan=4, pady=10)
 
@@ -242,33 +245,33 @@ class CadastrarProduto():
         if margem_lucro.get() == "":
             # Define o texto de status como indefinido e a cor como preta
             margem_lucro_status_text.set("...")
-            label_margem_lucro_status.configure(foreground="black")
+            label_margem_lucro_status.configure(text_color="white")
 
         # Verifica se a margem de lucro está entre 0 e 15 (Baixo)
         elif float(margem_lucro.get()) >= 0 and float(margem_lucro.get()) <= 15:
             margem_lucro_status_text.set("Baixo")
-            label_margem_lucro_status.configure(foreground="red")
+            label_margem_lucro_status.configure(text_color="red")
 
         # Verifica se a margem de lucro está entre 15 e 30 (Moderado)
         elif float(margem_lucro.get()) > 15 and float(margem_lucro.get()) <= 30:
             margem_lucro_status_text.set("Moderado")
-            label_margem_lucro_status.configure(foreground="orange")
+            label_margem_lucro_status.configure(text_color="orange")
 
         # Verifica se a margem de lucro está entre 30 e 45 (Alto)
         elif float(margem_lucro.get()) > 30 and float(margem_lucro.get()) <= 45:
             margem_lucro_status_text.set("Alto")
-            label_margem_lucro_status.configure(foreground="green")
+            label_margem_lucro_status.configure(text_color="green")
 
         # Verifica se a margem de lucro é maior que 45 (Muito Alto)
         elif float(margem_lucro.get()) > 45:
             margem_lucro_status_text.set("Muito Alto")
-            label_margem_lucro_status.configure(foreground="blue")
+            label_margem_lucro_status.configure(text_color="blue")
 
         # Se o valor inserido não for válido
         else:
             # Define o texto de status como "Insira um valor maior que 0" e a cor como preta
             margem_lucro_status_text.set("Insira um valor maior que 0")
-            label_margem_lucro_status.configure(foreground="black")
+            label_margem_lucro_status.configure(text_color="white")
 
 
     def cadastrar_produto(self):
@@ -341,48 +344,53 @@ class CadastrarProduto():
 
 # Frame para agrupar os campos
     def cadastro_design(self):
-        frame = ttk.Frame(self.root, padding="20")
-        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        frame = ctk.CTkFrame(self.root)
+        frame.place(relwidth=1, relheight=1)
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_columnconfigure(1, weight=3)
 
         # Campos de entrada
-        label_nome = ttk.Label(frame, text="Nome:")
-        label_nome.grid(row=0, column=0, sticky=tk.W)
-        entry_nome = ttk.Entry(frame, width=50)
-        entry_nome.grid(row=0, column=1, sticky=tk.W)
+        label_nome = ctk.CTkLabel(frame, text="Nome:")
+        label_nome.grid(row=0, column=0, sticky=tk.W, pady=7, padx=15)
+        entry_nome = ctk.CTkEntry(frame)
+        entry_nome.grid(row=0, column=1,sticky=tk.EW, pady=7, padx=15)
 
-        label_descricao = ttk.Label(frame, text="Descrição:")
-        label_descricao.grid(row=1, column=0, sticky=tk.W)
-        entry_descricao = ttk.Entry(frame, width=50)
-        entry_descricao.grid(row=1, column=1, sticky=tk.W)
+        label_descricao = ctk.CTkLabel(frame, text="Descrição:")
+        label_descricao.grid(row=1, column=0, sticky=tk.W, pady=5, padx=15)
+        entry_descricao = ctk.CTkEntry(frame)
+        entry_descricao.grid(row=1, column=1,sticky=tk.EW, pady=5, padx=15)
 
-        label_custo_aquisicao = ttk.Label(frame, text="Custo de Aquisição:")
-        label_custo_aquisicao.grid(row=2, column=0, sticky=tk.W)
-        entry_custo_aquisicao = ttk.Entry(frame, width=50)
-        entry_custo_aquisicao.grid(row=2, column=1, sticky=tk.W)
+        label_custo_aquisicao = ctk.CTkLabel(frame, text="Custo de Aquisição:")
+        label_custo_aquisicao.grid(row=2, column=0, sticky=tk.W, pady=5, padx=15)
+        entry_custo_aquisicao = ctk.CTkEntry(frame)
+        entry_custo_aquisicao.grid(row=2,sticky=tk.EW, column=1, pady=5, padx=15)
 
-        label_unidades = ttk.Label(frame, text="Unidades:")
-        label_unidades.grid(row=3, column=0, sticky=tk.W)
-        entry_unidades = ttk.Entry(frame, width=50)
-        entry_unidades.grid(row=3, column=1, sticky=tk.W)
+        label_unidades = ctk.CTkLabel(frame, text="Unidades:")
+        label_unidades.grid(row=3, column=0, sticky=tk.W, pady=5, padx=15)
+        entry_unidades = ctk.CTkEntry(frame)
+        entry_unidades.grid(row=3, column=1,sticky=tk.EW, pady=5, padx=15)
 
-        label_fornecedor = ttk.Label(frame, text="Fornecedor:")
-        label_fornecedor.grid(row=4, column=0, sticky=tk.W)
-        combo_fornecedor = ttk.Combobox(frame, width=47, state="readonly")
-        combo_fornecedor['values'] = ("Fornecedor 1", "Fornecedor 2", "Fornecedor 3")  # Aqui você pode adicionar os fornecedores cadastrados
-        combo_fornecedor.grid(row=4, column=1, sticky=tk.W)
+        label_fornecedor = ctk.CTkLabel(frame, text="Fornecedor:")
+        label_fornecedor.grid(row=4, column=0, sticky=tk.W, pady=5, padx=15)
+        combo_fornecedor = ctk.CTkComboBox(frame, state="readonly",values = ["Fornecedor 1", "Fornecedor 2", "Fornecedor 3"])  # Aqui você pode adicionar os fornecedores cadastrados
+        combo_fornecedor.grid(row=4, column=1,sticky=tk.EW, pady=5, padx=15)
 
-        label_preco_venda_principal = ttk.Label(frame, text="Preço de Venda:")
-        label_preco_venda_principal.grid(row=5, column=0, sticky=tk.W)
-        entry_preco_venda_principal = ttk.Entry(frame, width=50)
-        entry_preco_venda_principal.grid(row=5, column=1, sticky=tk.W)
+        label_preco_venda_principal = ctk.CTkLabel(frame, text="Preço de Venda:")
+        label_preco_venda_principal.grid(row=5, column=0, sticky=tk.W, pady=5, padx=15)
+        entry_preco_venda_principal = ctk.CTkEntry(frame)
+        entry_preco_venda_principal.grid(row=5,sticky=tk.EW, column=1, pady=5, padx=15)
 
-        botao_nova_tela = ttk.Button(frame, text="Calcular Preço de venda", command=self.tela_calculo_venda)
-        botao_nova_tela.grid(row=5, column=2, padx=10, sticky=tk.W)
+        buttons_frame = ctk.CTkFrame(frame, fg_color="#2b2b2b")
+        buttons_frame.grid_columnconfigure((0, 1), weight=1)
+        buttons_frame.grid(row=6, column=0, columnspan=2, pady=4)
+
+        botao_nova_tela = ctk.CTkButton(buttons_frame, text="Calcular Preço de venda", command=self.tela_calculo_venda)
+        botao_nova_tela.grid(row=0, column=1,padx=5, sticky=tk.W)
 
         # Botão para cadastrar produto
-        button_cadastrar = ttk.Button(frame, text="Cadastrar Produto", command=self.cadastrar_produto)
-        button_cadastrar.grid(row=6, column=0, columnspan=2, pady=10)
+        button_cadastrar = ctk.CTkButton(buttons_frame, text="Cadastrar Produto", command=self.cadastrar_produto)
+        button_cadastrar.grid(row=0, column=0,padx=5,sticky=tk.W)
 
 if __name__ == "__main__":
-    root = tk.Tk()
+    root = ctk.CTk()
     CadastrarProduto(root)

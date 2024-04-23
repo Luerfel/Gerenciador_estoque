@@ -77,7 +77,7 @@ class MainScreen(Commons):
 
     def entry_info(self):
 
-        container = ctk.CTkFrame(self.root, bg_color="#2b2b2b",corner_radius=22)
+        container = ctk.CTkFrame(self.root, fg_color="#242424",corner_radius=22)
         container.grid(row=1, column=0)
 
         nome_prod_label = ctk.CTkLabel(container, text="Informe o produto", bg_color="#2b2b2b")
@@ -145,14 +145,14 @@ class MainScreen(Commons):
 
         acrescimo_label = ctk.CTkLabel(container, text="Acrescimo", bg_color="#2b2b2b")
         acrescimo_label.grid(row=10, column=0)
-        acrescimo = ctk.CTkEntry(container, bg_color="#2b2b2b")
+        acrescimo = ctk.CTkEntry(container, fg_color="#2b2b2b")
         acrescimo.grid(row=11, column=0)
 
         liquido_label = ctk.CTkLabel(container, text="Liquido R$", bg_color="#2b2b2b")
-        liquido_label.grid(row=11, column=5)
+        liquido_label.grid(row=10, column=5)
         # receber o valor calculado
         liquido = ctk.CTkEntry(container, bg_color="#2b2b2b")
-        liquido.grid(row=12, column=5)
+        liquido.grid(row=11, column=5)
 
 
 
