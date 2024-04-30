@@ -60,7 +60,7 @@ class MainScreen(Commons):
         excluir_venda_button.configure(hover_color="#5662f6", cursor="hand2")
 
     def listar_produtos(self):
-        tree = Treeview(self.root, columns=('col2', 'col3', 'col4', 'col5'), show='headings',height=20)
+        tree = ttk.Treeview(self.root, columns=('col2', 'col3', 'col4', 'col5'), show='headings',height=20)
         tree.column('#0', minwidth=0, width=0)
         tree.column('col2', minwidth=0, width=100)
         tree.column('col3', minwidth=0, width=100)
@@ -80,75 +80,75 @@ class MainScreen(Commons):
         container = ctk.CTkFrame(self.root, fg_color="#242424",corner_radius=22)
         container.grid(row=1, column=0)
 
-        nome_prod_label = ctk.CTkLabel(container, text="Informe o produto", bg_color="#2b2b2b")
+        nome_prod_label = ctk.CTkLabel(container, text="Informe o produto", bg_color="#242424")
         nome_prod_label.grid(row=0, column=0)
         nome_prod = ctk.CTkEntry(container,bg_color="#2b2b2b")
         nome_prod.grid(row=1, column=0)
 
-        label_vazia = ctk.CTkLabel(container, text="vazioaaaaaaaaaa", bg_color="#2b2b2b", text_color="#2b2b2b")
+        label_vazia = ctk.CTkLabel(container, text="vazioaaaaaaaaaa", bg_color="#242424", text_color="#242424")
         label_vazia.grid(row=1, column=2)
 
-        venda_label = ctk.CTkLabel(container, text="Venda", bg_color="#2b2b2b")
+        venda_label = ctk.CTkLabel(container, text="Venda", bg_color="#242424")
         venda_label.grid(row=0, column=3, padx=10)
         venda = ctk.CTkEntry(container, bg_color="#2b2b2b")
         venda.grid(row=1, column=3)
 
-        item_label = ctk.CTkLabel(container, text="Item", bg_color="#2b2b2b")
+        item_label = ctk.CTkLabel(container, text="Item", bg_color="#242424")
         item_label.grid(row=0, column=4, padx=10)
         item = ctk.CTkEntry(container, bg_color="#2b2b2b")
         item.grid(row=1, column=4)
 
-        qtd_total_label = ctk.CTkLabel(container, text="Quantidade Total", bg_color="#2b2b2b")
+        qtd_total_label = ctk.CTkLabel(container, text="Quantidade Total", bg_color="#242424")
         qtd_total_label.grid(row=0, column=5)
         qtd_total = ctk.CTkEntry(container, bg_color="#2b2b2b")
         qtd_total.grid(row=1, column=5)
 
-        desc_label = ctk.CTkLabel(container, text="Descricão", bg_color="#2b2b2b")
+        desc_label = ctk.CTkLabel(container, text="Descricão", bg_color="#242424")
         desc_label.grid(row=2, column=0)
         desc = ctk.CTkEntry(container, bg_color="#242424")
         desc.grid(row=3, column=0)
 
-        complemento_label = ctk.CTkLabel(container, text="Complemento", bg_color="#2b2b2b")
+        complemento_label = ctk.CTkLabel(container, text="Complemento", bg_color="#242424")
         complemento_label.grid(row=4, column=0)
         complemento = ctk.CTkEntry(container, bg_color="#242424")
         complemento.grid(row=5, column=0)
 
-        fator_label = ctk.CTkLabel(container, text="Fator", bg_color="#2b2b2b")
+        fator_label = ctk.CTkLabel(container, text="Fator", bg_color="#242424")
         fator_label.grid(row=6, column=0)
         fator = ctk.CTkEntry(container, bg_color="#2b2b2b")
         fator.grid(row=7, column=0)
 
-        pecas_label = ctk.CTkLabel(container, text="Pecas", bg_color="#2b2b2b")
+        pecas_label = ctk.CTkLabel(container, text="Pecas", bg_color="#242424")
         pecas_label.grid(row=6, column=2)
         pecas = ctk.CTkEntry(container, bg_color="#2b2b2b")
         pecas.grid(row=7, column=2)
 
-        qtd_label = ctk.CTkLabel(container, text="Quantidade", bg_color="#2b2b2b")
+        qtd_label = ctk.CTkLabel(container, text="Quantidade", bg_color="#242424")
         qtd_label.grid(row=6, column=3)
         qtd = ctk.CTkEntry(container, bg_color="#2b2b2b")
         qtd.grid(row=7, column=3)
 
-        unitario_label = ctk.CTkLabel(container, text="Unitário R$", bg_color="#2b2b2b")
+        unitario_label = ctk.CTkLabel(container, text="Unitário R$", bg_color="#242424")
         unitario_label.grid(row=6, column=4)
         unitario = ctk.CTkEntry(container, bg_color="#2b2b2b")
         unitario.grid(row=7, column=4)
         # receber o valor calculado
-        total_label = ctk.CTkLabel(container, text="Total R$", bg_color="#2b2b2b")
+        total_label = ctk.CTkLabel(container, text="Total R$", bg_color="#242424")
         total_label.grid(row=6, column=5)
         total = ctk.CTkEntry(container, bg_color="#2b2b2b")
         total.grid(row=7, column=5)
 
-        desconto_label = ctk.CTkLabel(container, text="Desconto", bg_color="#2b2b2b")
+        desconto_label = ctk.CTkLabel(container, text="Desconto", bg_color="#242424")
         desconto_label.grid(row=8, column=0)
         desconto = ctk.CTkEntry(container, bg_color="#2b2b2b")
         desconto.grid(row=9, column=0)
 
-        acrescimo_label = ctk.CTkLabel(container, text="Acrescimo", bg_color="#2b2b2b")
+        acrescimo_label = ctk.CTkLabel(container, text="Acrescimo", bg_color="#242424")
         acrescimo_label.grid(row=10, column=0)
         acrescimo = ctk.CTkEntry(container, fg_color="#2b2b2b")
         acrescimo.grid(row=11, column=0)
 
-        liquido_label = ctk.CTkLabel(container, text="Liquido R$", bg_color="#2b2b2b")
+        liquido_label = ctk.CTkLabel(container, text="Liquido R$", bg_color="#242424")
         liquido_label.grid(row=10, column=5)
         # receber o valor calculado
         liquido = ctk.CTkEntry(container, bg_color="#2b2b2b")

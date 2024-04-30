@@ -7,7 +7,6 @@ class Commons():
         if messagebox.askyesno("Saída", "Você tem certeza que deseja sair?"):
             self.root.destroy()
 
-
     def design(self):
         """função comum para fazer o design da
         toolbar"""

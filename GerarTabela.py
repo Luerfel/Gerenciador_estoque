@@ -2,6 +2,11 @@ import oracledb # biblioteca da oracle
 import os      # usado na limpeza da tela
 import random
 import fc
+
+
+
+
+
 # Estabelece a conexão com o banco de dados Oracle.
 
 # **Observações:**
@@ -28,9 +33,8 @@ def main ():
     while True:
         repeticao = 1
         print("\n--- Menu de Cadastro de Produtos ---")
-        print("2. Exibir Tabelas")
-        print("3. Criar tabela (use caso seja um novo banco de dados)")
-        print("0. Sair")
+        print("1. Criar Tabela")
+        print("2. Preencher Tabela")
         while repeticao == 1:
             try:
              opcao = int(input("Digite a opção desejada: "))
@@ -39,7 +43,7 @@ def main ():
             except:
                 print("ERRO! TENTE NOVAMENTE!")
         if opcao == 1:
-            cadastrar_produto()
+            preencher_tabela()
         elif opcao == 2:
             imprimir_tabela()
         elif opcao == 0:
@@ -72,7 +76,6 @@ def criar_tabela():
         print(f"Erro ao acessar o banco de dados: {e}")
         return
     
-
 def cadastrar_produto():
 
     """
@@ -174,6 +177,31 @@ def gerar_codigo_barra():
         fc.limpar_tela()
 
     return codigo
+
+def preencher_tabela():
+    # Lista de roupas variadas
+    roupas = [
+        ("Camiseta", "Camiseta de algodão", "7890123456789", 20.00, 30.00, 50, "Fornecedor A"),
+        ("Calça Jeans", "Calça jeans masculina", "1234567890123", 40.00, 60.00, 30, "Fornecedor B"),
+        ("Vestido", "Vestido longo estampado", "2345678901234", 50.00, 80.00, 20, "Fornecedor C"),
+        ("Blusa", "Blusa de frio", "3456789012345", 30.00, 45.00, 40, "Fornecedor D"),
+        ("Shorts", "Shorts jeans", "4567890123456", 25.00, 35.00, 60, "Fornecedor E"),
+        ("Saia", "Saia rodada estampada", "5678901234567", 35.00, 50.00, 25, "Fornecedor F"),
+        ("Jaqueta", "Jaqueta corta-vento", "6789012345678", 60.00, 100.00, 15, "Fornecedor G"),
+        ("Sapato", "Sapato social masculino", "7890123456780", 80.00, 120.00, 20, "Fornecedor H"),
+        ("Bermuda", "Bermuda de praia", "8901234567890", 15.00, 25.00, 70, "Fornecedor I"),
+        ("Vestido", "Vestido curto floral", "9012345678901", 45.00, 70.00, 30, "Fornecedor J")
+    ]
+            
+    for roupa in roupas:
+        cursor.execute("""
+            INSERT INTO tbl_produtos (nome, descricao, codigo_de_barras, preco_de_compra, preco_de_venda, unidades, fornecedor)
+            VALUES (:nome, :descricao, :codigo_de_barras, :preco_de_compra, :preco_de_venda, :unidades, :fornecedor)
+        """, roupa)
+
+
+   
+    connection.commit()
 
 if __name__ == "__main__":
     main()
