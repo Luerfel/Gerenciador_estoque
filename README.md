@@ -5,5 +5,5 @@ pip install oracledb
 pip install customtkinter
 
 
-ao ecessar o programa pela primeira vez, crie as tabelas e o preenchimento dela com 10 produtos  com o arquivo GerarTabela.py
+ao acessar o programa pela primeira vez, crie as tabelas e o preenchimento dela com 10 produtos  com o arquivo GerarTabela.py
 
