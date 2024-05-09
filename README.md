@@ -2,7 +2,7 @@
 
 
 
-Oracle DataBase:
+Oracle Database:
 ```
 pip install oracledb
 ```
