@@ -6,11 +6,11 @@ Oracle DataBase:
 ```
 pip install oracledb
 ```
-Custom TKinter
+Custom TKinter:
 ```
 pip install customtkinter
 ```
-Tkinter
+Tkinter:
 ```
 pip install tk
 ```
