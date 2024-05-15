@@ -31,6 +31,9 @@ class MainScreen:
         self.root.bind("<F2>", self.consultar_produto)
         self.root.bind("<F3>", self.editar_produto)
         self.root.bind("<F4>", self.excluir_produto)
+        self.root.bind("<F6>", self.cancelar_item)
+        self.root.bind("<F7>", self.limpar_tela)
+
         self.root.mainloop()
 
     def conectar_bd(self):
@@ -58,6 +61,21 @@ class MainScreen:
         self.root.title("Stock Management System")
         self.root.resizable(False, False)
         self.root.configure(background="#f9f6ee")
+
+    def cancelar_item(self, event=None):
+        # Verifica se algum item está selecionado
+        if not self.tree.selection():
+            messagebox.showwarning("Aviso", "Nenhum item selecionado para cancelar.")
+            return
+
+        # Obtém o item selecionado
+        item_selecionado = self.tree.selection()[0]
+
+        # Remove o item selecionado da Treeview
+        self.tree.delete(item_selecionado)
+
+        # Atualiza o valor total após cancelar o item
+        self.atualizar_valor_total()
 
     def buttons_design(self):
         """
@@ -87,6 +105,10 @@ class MainScreen:
                 button.bind("<Button-1>", self.editar_produto)
             elif text.startswith("F4"):
                 button.bind("<Button-1>", self.excluir_produto)
+            elif text.startswith("F6"):
+                button.bind("<Button-1>", self.cancelar_item)
+            elif text.startswith("F7"):
+                button.bind("<Button-1>", self.limpar_tela)
 
     def cadastrar_produto(self, event=None):
         """
@@ -131,6 +153,23 @@ class MainScreen:
             self.calcular_total(None)
         else:
             messagebox.showerror("Erro", "Produto não encontrado.")
+
+    def limpar_tela(self, event=None):
+        # Exibe uma caixa de diálogo de confirmação
+        resposta = messagebox.askyesno("Cancelar Venda", "Tem certeza que deseja cancelar a venda atual? Todos os itens serão removidos.")
+
+        # Verifica se o usuário confirmou
+        if resposta:
+            # Limpa todos os campos
+            self.entry_busca.delete(0, tk.END)
+            self.nome_entry.delete(0, tk.END)
+            self.unitario_entry.delete(0, tk.END)
+            self.quantidade_entry.delete(0, tk.END)
+            self.total_entry.delete(0, tk.END)
+
+            # Redefine outros elementos da interface
+            self.tree.delete(*self.tree.get_children())  # Limpa a lista de produtos
+            self.label_total.configure(text="Valor Total : R$ 0.00")  # Redefine o valor total
 
     def listar_produtos(self):
         """
