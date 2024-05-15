@@ -74,68 +74,7 @@ def criar_tabela():
     except oracledb.DatabaseError as e:
         print(f"Erro ao acessar o banco de dados: {e}")
         return
-    
-def cadastrar_produto():
-
-    """
-    Função para cadastrar um novo produto no banco de dados.
-
-    Essa função solicita ao usuário os dados do produto e os insere na tabela `tbl_produtos`.
-    """
-
-
-    # Solicitação dos dados do produto
-
-  
-    # Nome do produto
-    nome = fc.dado_nvarchar2(100, "o nome", 1)
-
-    # Descrição do produto
-    descricao = fc.dado_nvarchar2(255, "a descrição", 0)
-
-    # Geração do código de barras
-    codigo_de_barras = gerar_codigo_barra()
-
-    # Preço de compra do produto
-    preco_de_compra = fc.dado_number(13, "o preco de compra")
-
-    # Cálculo do preço de venda
-    preco_de_venda = fc.calcular_preco_venda(preco_de_compra, taxas, 20)
-
-    # Quantidade de unidades do produto
-    unidades = int(fc.dado_number(13, "unidades"))
-
-    # Nome do fornecedor do produto
-    fornecedor = fc.dado_nvarchar2(100, "O Fornecedor",0)
-
-
-
-  # Inserção do produto no banco de dados
-
-    try:
-        cursor.execute("""
-        INSERT INTO tbl_produtos (nome, descricao, codigo_de_barras, preco_de_compra, preco_de_venda, unidades, fornecedor)
-        VALUES (:nome, :descricao, :codigo_de_barras, :preco_de_compra, :preco_de_venda, :unidades, :fornecedor)
-        """, {
-        'nome': nome,
-        'descricao': descricao,
-        'codigo_de_barras': codigo_de_barras,
-        'preco_de_compra': preco_de_compra,
-        'preco_de_venda': preco_de_venda,
-        'unidades': unidades,
-        'fornecedor': fornecedor
-        })
-
-        connection.commit() # Salva as alterações no banco de dados
-
-        print("Produto cadastrado com sucesso!")
-        input = ("Pressione ENTER para continuar.\n ")
-        fc.limpar_tela()
-
-    except oracledb.DatabaseError as e:
-        print(f"Erro ao acessar o banco de dados: {e}")
-        return
-
+      
 def imprimir_tabela():
     for row in cursor.execute('SELECT * FROM tbl_produtos'):
         print(f"""
