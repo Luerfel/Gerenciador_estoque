@@ -1,18 +1,14 @@
-# Para o pleno funcionamento do programa favor instalar as seguintes bibliotecas
+instalação das bibliotecas necessarias :
 
-
-
-Oracle Database:
-```
 pip install oracledb
-```
-Custom TKinter:
-```
-pip install customtkinter
-```
-Tkinter:
-```
-pip install tk
-```
 
-### Ao acessar o programa pela primeira vez, crie as tabelas e o preenchimento dela com 10 produtos  com o arquivo GerarTabela.py
+pip install customtkinter
+
+
+ao ecessar o programa pela primeira vez, crie as tabelas e o preenchimento dela com 10 produtos  com o arquivo GerarTabela.py
+
+Os Arquivos que precisam ser executados são esses :
+
+CadastrarProduto.py
+EditarProduto.py
+ExcluirProduto.py

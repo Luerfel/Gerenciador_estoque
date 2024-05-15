@@ -22,7 +22,7 @@ from commons import Commons
 
 # Caso seja a primeira vez Por favor Gere a tabela com o GerarTabela.py
 
-connection = oracledb.connect(user="SYSTEM", password="senha", host="localhost", port=1521)
+connection = oracledb.connect(user="System", password="senha", host="localhost", port=1521)
 cursor = connection.cursor()
 
 

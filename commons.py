@@ -1,5 +1,5 @@
 from tkinter import messagebox
-from CadastrarProduto import CadastrarProduto
+from cadastrar_produto import CadastrarProduto
 import tkinter as tk
 
 class Commons():
