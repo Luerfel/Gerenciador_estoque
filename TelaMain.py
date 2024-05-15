@@ -133,6 +133,7 @@ class MainScreen:
         Abre o arquivo de exclusão de produto.
         """
         subprocess.Popen(["python", "excluir_produto.py"])
+   
     def buscar_produto(self):
         termo_busca = self.entry_busca.get()
         sql = "SELECT nome, preco_de_venda FROM tbl_produtos WHERE codigo_de_barras = :TERMOS_BUSCA"
@@ -161,15 +162,16 @@ class MainScreen:
         # Verifica se o usuário confirmou
         if resposta:
             # Limpa todos os campos
-            self.entry_busca.delete(0, tk.END)
-            self.nome_entry.delete(0, tk.END)
-            self.unitario_entry.delete(0, tk.END)
-            self.quantidade_entry.delete(0, tk.END)
-            self.total_entry.delete(0, tk.END)
+            self.entry_busca.delete(0, ctk.END)
+            self.nome_entry.delete(0, ctk.END)
+            self.unitario_entry.delete(0, ctk.END)
+            self.quantidade_entry.delete(0, ctk.END)
+            self.total_entry.delete(0, ctk.END)
 
             # Redefine outros elementos da interface
             self.tree.delete(*self.tree.get_children())  # Limpa a lista de produtos
             self.label_total.configure(text="Valor Total : R$ 0.00")  # Redefine o valor total
+            self.limpar_campos()
 
     def listar_produtos(self):
         """
@@ -273,8 +275,8 @@ class MainScreen:
     
         self.tree.insert('', 'end', values=(codigo, nome, quantidade, f"R$ {valor_total:.2f}"))
         self.atualizar_valor_total()
-
-        # Limpar os campos após adicionar o produto
+        self.limpar_campos()
+    def limpar_campos(self):        
         self.entry_busca.delete(0, tk.END)
     
         # Remover a configuração de somente leitura temporariamente
