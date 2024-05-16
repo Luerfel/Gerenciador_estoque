@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import customtkinter as ctk
 import oracledb
-from commons import Commons
 
 # biblioteca da oracle
 
@@ -26,7 +25,7 @@ connection = oracledb.connect(user="System", password="senha", host="localhost",
 cursor = connection.cursor()
 
 
-class EditarProduto(Commons):
+class EditarProduto():
     def __init__(self, root_parameter):
         # Inicializa a janela principal da aplicação
         self.root = root_parameter
@@ -40,6 +39,14 @@ class EditarProduto(Commons):
         # Restaura a janela principal e fecha a janela de edição
         self.root.deiconify()
         self.nova_janela.destroy()
+ 
+    def confirm_exit(self):
+        """
+        Exibe uma mensagem de confirmação ao sair do programa.
+        """
+        if messagebox.askokcancel("Sair", "Você tem certeza que deseja sair?"):
+            self.root.destroy()
+    
 
     def consultar_banco_de_dados(self, codigo):
         # Consulta o banco de dados para obter as informações do produto pelo código de barras

@@ -3,7 +3,6 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox
 import oracledb
-from commons import Commons
 
 # biblioteca da oracle
 
@@ -27,7 +26,7 @@ connection = oracledb.connect(user="SYSTEM", password="senha", host="localhost",
 cursor = connection.cursor()
 
 
-class ExcluirProduto(Commons):
+class ExcluirProduto():
     def __init__(self, root_parameter):
         # Inicializa a janela principal da aplicação
         self.root = root_parameter
