@@ -1,11 +1,9 @@
 import tkinter as tk
 import tkinter.messagebox as messagebox
-from tkinter.ttk import Treeview
 from tkinter import ttk
 import customtkinter as ctk
 import oracledb
 import subprocess
-import os
 
 class MainScreen:
     """
@@ -27,14 +25,8 @@ class MainScreen:
         self.listar_produtos()
         self.entry_info()
         self.criar_label_total()
+        self.setup_bindings()
         self.root.protocol("WM_DELETE_WINDOW", self.confirm_exit)
-        self.root.bind("<F1>", self.cadastrar_produto)
-        self.root.bind("<F2>", self.consultar_produto)
-        self.root.bind("<F3>", self.editar_produto)
-        self.root.bind("<F4>", self.excluir_produto)
-        self.root.bind("<F6>", self.cancelar_item)
-        self.root.bind("<F7>", self.limpar_tela)
-
         self.root.mainloop()
 
     def conectar_bd(self):
@@ -44,7 +36,6 @@ class MainScreen:
         try:
             self.connection = oracledb.connect(user="SYSTEM", password="senha", host="localhost", port=1521)
             self.cursor = self.connection.cursor()
-            
             print("Conexão ao banco de dados realizada com sucesso.")
         except oracledb.DatabaseError as e:
             error, = e.args
@@ -71,19 +62,26 @@ class MainScreen:
         self.root.resizable(False, False)
         self.root.configure(background="#f9f6ee")
 
+    def setup_bindings(self):
+        """
+        Configura os atalhos de teclado.
+        """
+        self.root.bind("<F1>", self.cadastrar_produto)
+        self.root.bind("<F2>", self.consultar_produto)
+        self.root.bind("<F3>", self.editar_produto)
+        self.root.bind("<F4>", self.excluir_produto)
+        self.root.bind("<F6>", self.cancelar_item)
+        self.root.bind("<F7>", self.limpar_tela)
+
     def cancelar_item(self, event=None):
-        # Verifica se algum item está selecionado
+        """
+        Cancela o item selecionado na Treeview.
+        """
         if not self.tree.selection():
             messagebox.showwarning("Aviso", "Nenhum item selecionado para cancelar.")
             return
-
-        # Obtém o item selecionado
         item_selecionado = self.tree.selection()[0]
-
-        # Remove o item selecionado da Treeview
         self.tree.delete(item_selecionado)
-
-        # Atualiza o valor total após cancelar o item
         self.atualizar_valor_total()
 
     def buttons_design(self):
@@ -93,31 +91,21 @@ class MainScreen:
         self.buttons_container = ctk.CTkFrame(self.root, fg_color="#242424")
         self.buttons_container.grid(row=0, column=0, columnspan=12, padx=20, pady=20, sticky="nsew")
         button_data = [
-            ("F1\nCadastrar Produto", 0, 0),
-            ("F2\nConsultar Produto", 0, 1),
-            ("F3\nEditar Produto", 0, 2),
-            ("F4\nExcluir Produto", 0, 3),
-            ("F5\nCadastrar Fornecedor", 0, 4),
-            ("F6\nCancelar Item", 0, 5),
-            ("F7\nCancelar Venda", 0, 6),
-            ("F8\nConcluir Venda", 0, 7)
+            ("F1\nCadastrar Produto", 0, 0, self.cadastrar_produto),
+            ("F2\nConsultar Produto", 0, 1, self.consultar_produto),
+            ("F3\nEditar Produto", 0, 2, self.editar_produto),
+            ("F4\nExcluir Produto", 0, 3, self.excluir_produto),
+            ("F5\nCadastrar Fornecedor", 0, 4, None),  # Função não implementada
+            ("F6\nCancelar Item", 0, 5, self.cancelar_item),
+            ("F7\nCancelar Venda", 0, 6, self.limpar_tela),
+            ("F8\nConcluir Venda", 0, 7, None)  # Função não implementada
         ]
-        for text, row, column in button_data:
+        for text, row, column, command in button_data:
             button = ctk.CTkButton(self.buttons_container, text=text, width=80, height=40, corner_radius=13)
             button.grid(row=row, column=column, padx=10, pady=10)
             button.configure(hover_color="#5662f6", cursor="hand2")
-            if text.startswith("F1"):
-                button.bind("<Button-1>", self.cadastrar_produto)
-            elif text.startswith("F2"):
-                button.bind("<Button-1>", self.consultar_produto)
-            elif text.startswith("F3"):
-                button.bind("<Button-1>", self.editar_produto)
-            elif text.startswith("F4"):
-                button.bind("<Button-1>", self.excluir_produto)
-            elif text.startswith("F6"):
-                button.bind("<Button-1>", self.cancelar_item)
-            elif text.startswith("F7"):
-                button.bind("<Button-1>", self.limpar_tela)
+            if command:
+                button.bind("<Button-1>", command)
 
     def cadastrar_produto(self, event=None):
         """
@@ -144,6 +132,9 @@ class MainScreen:
         subprocess.Popen(["python", "excluir_produto.py"])
 
     def buscar_produto(self):
+        """
+        Busca um produto pelo código de barras.
+        """
         termo_busca = self.entry_busca.get()
         try:
             sql = "SELECT nome, preco_de_venda FROM tbl_produtos WHERE codigo_de_barras = :TERMOS_BUSCA"
@@ -170,37 +161,70 @@ class MainScreen:
             messagebox.showerror("Erro de Banco de Dados", "Ocorreu um erro ao buscar o produto. Tente novamente.")
 
     def limpar_tela(self, event=None):
-        # Exibe uma caixa de diálogo de confirmação
+        """
+        Limpa a tela e cancela a venda atual.
+        """
         resposta = messagebox.askyesno("Cancelar Venda", "Tem certeza que deseja cancelar a venda atual? Todos os itens serão removidos.")
-        # Verifica se o usuário confirmou
         if resposta:
-            # Limpa todos os campos
             self.entry_busca.delete(0, ctk.END)
             self.nome_entry.delete(0, ctk.END)
             self.unitario_entry.delete(0, ctk.END)
             self.quantidade_entry.delete(0, ctk.END)
             self.total_entry.delete(0, ctk.END)
-            # Redefine outros elementos da interface
-            self.tree.delete(*self.tree.get_children())  # Limpa a lista de produtos
-            self.label_total.configure(text="Valor Total : R$ 0.00")  # Redefine o valor total
+            self.tree.delete(*self.tree.get_children())
+            self.label_total.configure(text="Valor Total : R$ 0.00")
             self.limpar_campos()
 
     def listar_produtos(self):
         """
-        Exibe uma lista de produtos na tela principal.
+        Exibe uma lista de produtos na tela principal com uma aparência aprimorada.
         """
-        self.tree = ttk.Treeview(self.root, columns=('col2', 'col3', 'col4', 'col5'), show='headings', height=20)
-        self.tree.column('#0', minwidth=0, width=0)
-        self.tree.column('col2', minwidth=0, width=100)
-        self.tree.column('col3', minwidth=0, width=100)
-        self.tree.column('col4', minwidth=0, width=100)
-        self.tree.column('col5', minwidth=0, width=100)
-        self.tree.heading('#0', text='')
-        self.tree.heading('col2', text='Código Produto')
+        style = ttk.Style()
+        style.configure("Treeview",
+                    background="#f0f0f0",
+                    foreground="black",
+                    rowheight=25,
+                    fieldbackground="#f0f0f0",
+                    font=("arial", 11))
+        style.map('Treeview', background=[('selected', '#347083')])
+    
+        # Alternar as cores das linhas
+        style.configure("Treeview.Heading", font=("Helvetica", 10, "bold"))
+        style.layout("Treeview", [('Treeview.treearea', {'sticky': 'nswe'})])
+   
+
+        # Frame para conter a Treeview e a barra de rolagem
+        tree_frame = ctk.CTkFrame(self.root)
+        tree_frame.grid(row=1, column=1, padx=20, pady=20, sticky='nsew')
+    
+        # Barra de rolagem vertical
+        vsb = ttk.Scrollbar(tree_frame, orient="vertical")
+        vsb.pack(side='right', fill='y')
+    
+    
+        self.tree = ttk.Treeview(tree_frame, columns=('col2', 'col3', 'col4', 'col5'), show='headings',
+                             height=20, yscrollcommand=vsb.set, style="Treeview")
+
+    
+        vsb.config(command=self.tree.yview)
+    
+        # Definindo as colunas
+        self.tree.column('col2', minwidth=0, width=100, anchor='center')
+        self.tree.column('col3', minwidth=0, width=150, anchor='center')
+        self.tree.column('col4', minwidth=0, width=50, anchor='center')
+        self.tree.column('col5', minwidth=0, width=100, anchor='center')
+    
+        # Definindo os cabeçalhos
+        self.tree.heading('col2', text='Código de Barra')
         self.tree.heading('col3', text='Nome Produto')
         self.tree.heading('col4', text='Quantidade')
         self.tree.heading('col5', text='Valor Total')
-        self.tree.grid(row=1, column=1)
+    
+        # Empacotando a Treeview
+        self.tree.pack(fill='both', expand=True)
+    
+        # Estilo para alternar cores de linhas
+        self.tree.tag_configure('evenrow', background="lightblue")
 
     def entry_info(self):
         """
@@ -208,15 +232,16 @@ class MainScreen:
         """
         container = ctk.CTkFrame(self.root, fg_color="#242424", corner_radius=22)
         container.grid(row=1, column=0, padx=20, pady=10, sticky='w')
-        # Campo de busca (Código de Barras)
+
         label_busca = ctk.CTkLabel(container, text="Código de Barras", bg_color="#242424")
         label_busca.grid(row=0, column=0, padx=(10, 5), pady=5, sticky='w')
         self.entry_busca = ctk.CTkEntry(container, bg_color="#2b2b2b")
         self.entry_busca.grid(row=0, column=1, padx=(0, 10), pady=5, sticky='ew')
-        # Botão de busca
+
         busca_button = ctk.CTkButton(container, text="Buscar", width=10, height=2, corner_radius=5, command=self.buscar_produto)
         busca_button.grid(row=0, column=2, padx=(10, 0), pady=10, sticky='w')
         busca_button.configure(hover_color="#5662f6", cursor="hand2")
+
         entry_data = [
             ("Nome", 1),
             ("Unitário R$", 2),
@@ -241,12 +266,12 @@ class MainScreen:
             elif label_text == "Total do Item R$":
                 self.total_entry = entry
                 self.total_entry.configure(state='readonly')
-        # Botão de adicionar produto à lista
+
         adicionar_button = ctk.CTkButton(container, text="Adicionar Item", width=10, height=2, corner_radius=5, command=self.adicionar_produto)
         adicionar_button.grid(row=5, column=1, padx=(10, 0), pady=10, sticky='w')
         adicionar_button.configure(hover_color="#5662f6", cursor="hand2")
 
-    def calcular_total(self, event):
+    def calcular_total(self, event=None):
         """
         Calcula o total multiplicando o preço unitário pela quantidade total.
         """
@@ -273,16 +298,21 @@ class MainScreen:
         if not nome:
             messagebox.showerror("Erro", "Por favor, busque um produto antes de adicioná-lo à lista.")
             return
-        quantidade = int(self.quantidade_entry.get())
-        valor_unitario = float(self.unitario_entry.get().replace("R$", "").replace(",", "."))
-        valor_total = quantidade * valor_unitario
-        self.tree.insert('', 'end', values=(codigo, nome, quantidade, f"R$ {valor_total:.2f}"))
-        self.atualizar_valor_total()
-        self.limpar_campos()
+        try:
+            quantidade = int(self.quantidade_entry.get())
+            valor_unitario = float(self.unitario_entry.get().replace("R$", "").replace(",", "."))
+            valor_total = quantidade * valor_unitario
+            self.tree.insert('', 'end', values=(codigo, nome, quantidade, f"R$ {valor_total:.2f}"))
+            self.atualizar_valor_total()
+            self.limpar_campos()
+        except ValueError:
+            messagebox.showerror("Erro", "Por favor, insira valores válidos.")
 
     def limpar_campos(self):
+        """
+        Limpa os campos de entrada.
+        """
         self.entry_busca.delete(0, tk.END)
-        # Remover a configuração de somente leitura temporariamente
         self.nome_entry.configure(state=tk.NORMAL)
         self.unitario_entry.configure(state=tk.NORMAL)
         self.total_entry.configure(state=tk.NORMAL)
@@ -290,7 +320,6 @@ class MainScreen:
         self.unitario_entry.delete(0, tk.END)
         self.quantidade_entry.delete(0, tk.END)
         self.total_entry.delete(0, tk.END)
-        # Restaurar a configuração de somente leitura
         self.nome_entry.configure(state='readonly')
         self.unitario_entry.configure(state='readonly')
         self.total_entry.configure(state='readonly')
@@ -316,6 +345,7 @@ class MainScreen:
         Exibe uma mensagem de confirmação ao sair do programa.
         """
         if messagebox.askokcancel("Sair", "Você tem certeza que deseja sair?"):
+            self.connection.close()
             self.root.destroy()
 
 if __name__ == "__main__":
