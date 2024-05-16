@@ -5,6 +5,7 @@ from tkinter import ttk
 import customtkinter as ctk
 import oracledb
 import subprocess
+import os
 
 class MainScreen:
     """
@@ -40,8 +41,16 @@ class MainScreen:
         """
         Conecta ao banco de dados Oracle.
         """
-        self.connection = oracledb.connect(user="SYSTEM", password="senha", host="localhost", port=1521)
-        self.cursor = self.connection.cursor()
+        try:
+            self.connection = oracledb.connect(user="SYSTEM", password="senha", host="localhost", port=1521)
+            self.cursor = self.connection.cursor()
+            
+            print("Conexão ao banco de dados realizada com sucesso.")
+        except oracledb.DatabaseError as e:
+            error, = e.args
+            print(f"Erro ao conectar ao banco de dados: {error.message}")
+            messagebox.showerror("Erro de Conexão", "Não foi possível conectar ao banco de dados. Verifique suas credenciais e tente novamente.")
+            self.root.destroy()
 
     def ajustar_grid(self):
         """
@@ -90,7 +99,7 @@ class MainScreen:
             ("F4\nExcluir Produto", 0, 3),
             ("F5\nCadastrar Fornecedor", 0, 4),
             ("F6\nCancelar Item", 0, 5),
-            ("F7\nCancelar Venda", 0,6),
+            ("F7\nCancelar Venda", 0, 6),
             ("F8\nConcluir Venda", 0, 7)
         ]
         for text, row, column in button_data:
@@ -133,32 +142,36 @@ class MainScreen:
         Abre o arquivo de exclusão de produto.
         """
         subprocess.Popen(["python", "excluir_produto.py"])
-   
+
     def buscar_produto(self):
         termo_busca = self.entry_busca.get()
-        sql = "SELECT nome, preco_de_venda FROM tbl_produtos WHERE codigo_de_barras = :TERMOS_BUSCA"
-        self.cursor.execute(sql, {"TERMOS_BUSCA": termo_busca})
-        resultado = self.cursor.fetchone()
-        if resultado:
-            nome, preco_venda = resultado
-            self.nome_entry.configure(state=tk.NORMAL)
-            self.unitario_entry.configure(state=tk.NORMAL)
-            self.nome_entry.delete(0, tk.END)
-            self.nome_entry.insert(0, nome)
-            self.unitario_entry.delete(0, tk.END)
-            self.unitario_entry.insert(0, f"R$ {preco_venda:.2f}")
-            self.nome_entry.configure(state='readonly')
-            self.unitario_entry.configure(state='readonly')
-            self.quantidade_entry.delete(0, tk.END)
-            self.quantidade_entry.insert(0, "1")
-            self.calcular_total(None)
-        else:
-            messagebox.showerror("Erro", "Produto não encontrado.")
+        try:
+            sql = "SELECT nome, preco_de_venda FROM tbl_produtos WHERE codigo_de_barras = :TERMOS_BUSCA"
+            self.cursor.execute(sql, {"TERMOS_BUSCA": termo_busca})
+            resultado = self.cursor.fetchone()
+            if resultado:
+                nome, preco_venda = resultado
+                self.nome_entry.configure(state=tk.NORMAL)
+                self.unitario_entry.configure(state=tk.NORMAL)
+                self.nome_entry.delete(0, tk.END)
+                self.nome_entry.insert(0, nome)
+                self.unitario_entry.delete(0, tk.END)
+                self.unitario_entry.insert(0, f"R$ {preco_venda:.2f}")
+                self.nome_entry.configure(state='readonly')
+                self.unitario_entry.configure(state='readonly')
+                self.quantidade_entry.delete(0, tk.END)
+                self.quantidade_entry.insert(0, "1")
+                self.calcular_total(None)
+            else:
+                messagebox.showerror("Erro", "Produto não encontrado.")
+        except oracledb.DatabaseError as e:
+            error, = e.args
+            print(f"Erro ao buscar produto: {error.message}")
+            messagebox.showerror("Erro de Banco de Dados", "Ocorreu um erro ao buscar o produto. Tente novamente.")
 
     def limpar_tela(self, event=None):
         # Exibe uma caixa de diálogo de confirmação
         resposta = messagebox.askyesno("Cancelar Venda", "Tem certeza que deseja cancelar a venda atual? Todos os itens serão removidos.")
-
         # Verifica se o usuário confirmou
         if resposta:
             # Limpa todos os campos
@@ -167,7 +180,6 @@ class MainScreen:
             self.unitario_entry.delete(0, ctk.END)
             self.quantidade_entry.delete(0, ctk.END)
             self.total_entry.delete(0, ctk.END)
-
             # Redefine outros elementos da interface
             self.tree.delete(*self.tree.get_children())  # Limpa a lista de produtos
             self.label_total.configure(text="Valor Total : R$ 0.00")  # Redefine o valor total
@@ -196,31 +208,26 @@ class MainScreen:
         """
         container = ctk.CTkFrame(self.root, fg_color="#242424", corner_radius=22)
         container.grid(row=1, column=0, padx=20, pady=10, sticky='w')
-
         # Campo de busca (Código de Barras)
         label_busca = ctk.CTkLabel(container, text="Código de Barras", bg_color="#242424")
         label_busca.grid(row=0, column=0, padx=(10, 5), pady=5, sticky='w')
         self.entry_busca = ctk.CTkEntry(container, bg_color="#2b2b2b")
         self.entry_busca.grid(row=0, column=1, padx=(0, 10), pady=5, sticky='ew')
-
         # Botão de busca
         busca_button = ctk.CTkButton(container, text="Buscar", width=10, height=2, corner_radius=5, command=self.buscar_produto)
         busca_button.grid(row=0, column=2, padx=(10, 0), pady=10, sticky='w')
         busca_button.configure(hover_color="#5662f6", cursor="hand2")
-
         entry_data = [
             ("Nome", 1),
             ("Unitário R$", 2),
             ("Quantidade Total", 3),
             ("Total do Item R$", 4),
         ]
-
         for label_text, row in entry_data:
             label = ctk.CTkLabel(container, text=label_text, bg_color="#242424")
             label.grid(row=row, column=0, padx=(10, 5), pady=5, sticky='w')
             entry = ctk.CTkEntry(container, bg_color="#2b2b2b")
             entry.grid(row=row, column=1, padx=(0, 10), pady=5, sticky='ew')
-
             if label_text == "Nome":
                 self.nome_entry = entry
                 self.nome_entry.configure(state='readonly')
@@ -234,7 +241,6 @@ class MainScreen:
             elif label_text == "Total do Item R$":
                 self.total_entry = entry
                 self.total_entry.configure(state='readonly')
-
         # Botão de adicionar produto à lista
         adicionar_button = ctk.CTkButton(container, text="Adicionar Item", width=10, height=2, corner_radius=5, command=self.adicionar_produto)
         adicionar_button.grid(row=5, column=1, padx=(10, 0), pady=10, sticky='w')
@@ -263,43 +269,37 @@ class MainScreen:
         if not codigo:
             messagebox.showerror("Erro", "Por favor, insira um código de barras válido.")
             return
-    
         nome = self.nome_entry.get()
         if not nome:
             messagebox.showerror("Erro", "Por favor, busque um produto antes de adicioná-lo à lista.")
             return
-    
         quantidade = int(self.quantidade_entry.get())
         valor_unitario = float(self.unitario_entry.get().replace("R$", "").replace(",", "."))
         valor_total = quantidade * valor_unitario
-    
         self.tree.insert('', 'end', values=(codigo, nome, quantidade, f"R$ {valor_total:.2f}"))
         self.atualizar_valor_total()
         self.limpar_campos()
-    def limpar_campos(self):        
+
+    def limpar_campos(self):
         self.entry_busca.delete(0, tk.END)
-    
         # Remover a configuração de somente leitura temporariamente
         self.nome_entry.configure(state=tk.NORMAL)
         self.unitario_entry.configure(state=tk.NORMAL)
         self.total_entry.configure(state=tk.NORMAL)
-    
         self.nome_entry.delete(0, tk.END)
         self.unitario_entry.delete(0, tk.END)
         self.quantidade_entry.delete(0, tk.END)
         self.total_entry.delete(0, tk.END)
-    
         # Restaurar a configuração de somente leitura
         self.nome_entry.configure(state='readonly')
         self.unitario_entry.configure(state='readonly')
         self.total_entry.configure(state='readonly')
 
-
     def criar_label_total(self):
         """
         Cria uma label para mostrar o valor total de todos os itens.
         """
-        self.label_total = ctk.CTkLabel(self.root, text="Valor Total : R$ 0.00",font=("Helvetica", 30))
+        self.label_total = ctk.CTkLabel(self.root, text="Valor Total : R$ 0.00", font=("Helvetica", 30))
         self.label_total.grid(row=2, column=1, padx=20, pady=10, sticky='w')
 
     def atualizar_valor_total(self):
