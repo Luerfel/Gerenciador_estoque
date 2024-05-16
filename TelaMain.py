@@ -179,6 +179,7 @@ class MainScreen:
         """
         Exibe uma lista de produtos na tela principal com uma aparência aprimorada.
         """
+        # configuração da tela
         style = ttk.Style()
         style.configure("Treeview",
                     background="#f0f0f0",
