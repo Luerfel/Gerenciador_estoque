@@ -31,6 +31,10 @@ class EditarProduto():
             self.tree.insert("", "end", values=(codigo, nome))
 
     def editar_produto_design(self):
+        if self.codigo is None:
+            messagebox.showerror("Erro", "Nenhum produto selecionado para edição.")
+            return
+
         self.frame_editar = ctk.CTkFrame(self.root)
         self.frame_editar.place(relwidth=1, relheight=1)
         self.frame_editar.grid_columnconfigure(0, weight=1)
@@ -78,12 +82,13 @@ class EditarProduto():
 
         self.carregar_produto_selecionado()
 
-    def carregar_dados_produto(self, event):
+    def carregar_dados_produto(self, event=None):
         selected_item = self.tree.selection()
         if selected_item:
             codigo = self.tree.item(selected_item[0], "values")[0]
             self.codigo = codigo
-            self.editar_produto_design()
+        else:
+            messagebox.showerror("Erro", "Selecione um produto na lista para editar.")
 
     def carregar_produto_selecionado(self):
         if self.codigo:
@@ -147,7 +152,7 @@ class EditarProduto():
         self.tree.heading("Código de Barras", text="Código de Barras")
         self.tree.heading("Nome", text="Nome")
         self.tree.grid(row=1, column=0, sticky=tk.W)
-        self.tree.bind("<Double-1>", self.carregar_dados_produto)
+        self.tree.bind("<ButtonRelease-1>", self.carregar_dados_produto)
 
         frame_busca = ctk.CTkFrame(self.frame, fg_color="#2b2b2b")
         frame_busca.place(relwidth=1, relheight=1)
