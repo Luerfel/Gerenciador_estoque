@@ -117,3 +117,74 @@ def calcular_custos_e_percentuais(entry_rendimento_mensal, entry_custo_fixo, ent
     calcular_e_exibir_percentual(entry_custo_mercadoria, entry_custo_operacional, entry_percentual_custo_operacional,
                                  "custo total das mercadorias")
 
+    def descricao(self, frame):
+        # Configuração do frame de descrição dos itens
+        self.descricao_frame = ctk.CTkFrame(frame)
+        self.descricao_frame.grid(row=5, column=5, columnspan=2, rowspan=4)
+        self.descricao_frame.grid_columnconfigure(0, weight=1)
+        self.descricao_frame.grid_columnconfigure(1, weight=1)
+        self.descricao_frame.grid_columnconfigure(2, weight=1)
+
+        # Labels para os cabeçalhos das descrições
+        label_header_descricao = ctk.CTkLabel(self.descricao_frame, text="Descricão")
+        label_header_descricao.grid(row=0, column=0)
+
+        label_desc_preco_venda = ctk.CTkLabel(self.descricao_frame, text="A.Preço de Venda")
+        label_desc_preco_venda.grid(row=1, column=0)
+
+        label_desc_custo_aquisicao = ctk.CTkLabel(self.descricao_frame, text="B.Custo de Aquisição")
+        label_desc_custo_aquisicao.grid(row=2, column=0)
+
+        label_desc_receita_bruta = ctk.CTkLabel(self.descricao_frame, text="C.Receita Bruta(A-B)")
+        label_desc_receita_bruta.grid(row=3, column=0)
+
+        label_desc_custo_fixo = ctk.CTkLabel(self.descricao_frame, text="D.Custo Fixo")
+        label_desc_custo_fixo.grid(row=4, column=0)
+
+        label_desc_impostos = ctk.CTkLabel(self.descricao_frame, text="E.Impostos")
+        label_desc_impostos.grid(row=5, column=0)
+
+        # Subframe para valores e percentuais
+        self.descricao_subframe = ctk.CTkFrame(self.descricao_frame)
+        self.descricao_subframe.grid(row=0, rowspan=6, column=2, sticky="ew")
+        self.descricao_subframe.grid_columnconfigure(0, weight=1)
+        self.descricao_subframe.grid_columnconfigure(1, weight=1)
+
+        # Labels para valores
+        label_header_valor = ctk.CTkLabel(self.descricao_subframe, text="Valor")
+        label_header_valor.grid(row=0, column=0, padx=16, pady=3)
+
+        label_val_preco_venda = ctk.CTkLabel(self.descricao_subframe, text="XX")
+        label_val_preco_venda.grid(row=1, column=0, padx=16, pady=3)
+
+        label_val_custo_aquisicao = ctk.CTkLabel(self.descricao_subframe, text="XX")
+        label_val_custo_aquisicao.grid(row=2, column=0, padx=16, pady=3)
+
+        label_val_receita_bruta = ctk.CTkLabel(self.descricao_subframe, text="XX")
+        label_val_receita_bruta.grid(row=3, column=0, padx=16, pady=3)
+
+        label_val_custo_fixo = ctk.CTkLabel(self.descricao_subframe, text="XX")
+        label_val_custo_fixo.grid(row=4, column=0, padx=16, pady=3)
+
+        label_val_impostos = ctk.CTkLabel(self.descricao_subframe, text="XX")
+        label_val_impostos.grid(row=5, column=0, padx=16, pady=3)
+
+        # Labels para percentuais
+        label_header_percentual = ctk.CTkLabel(self.descricao_subframe, text="%")
+        label_header_percentual.grid(row=0, column=1, padx=16, pady=3)
+
+        label_perc_preco_venda = ctk.CTkLabel(self.descricao_subframe, text="X%")
+        label_perc_preco_venda.grid(row=1, column=1, padx=16, pady=3)
+
+        label_perc_custo_aquisicao = ctk.CTkLabel(self.descricao_subframe, text="X%")
+        label_perc_custo_aquisicao.grid(row=2, column=1, padx=16, pady=3)
+
+        label_perc_receita_bruta = ctk.CTkLabel(self.descricao_subframe, text="X%")
+        label_perc_receita_bruta.grid(row=3, column=1, padx=16, pady=3)
+
+        label_perc_custo_fixo = ctk.CTkLabel(self.descricao_subframe, text="X%")
+        label_perc_custo_fixo.grid(row=4, column=1, padx=16, pady=3)
+
+        label_perc_impostos = ctk.CTkLabel(self.descricao_subframe, text="X%")
+        label_perc_impostos.grid(row=5, column=1, padx=16, pady=3)
+    

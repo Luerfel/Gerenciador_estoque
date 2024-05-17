@@ -1,6 +1,6 @@
+import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox
-import customtkinter as ctk
 import oracledb
 
 # biblioteca da oracle
@@ -21,170 +21,133 @@ import oracledb
 
 # Caso seja a primeira vez Por favor Gere a tabela com o GerarTabela.py
 
-connection = oracledb.connect(user="System", password="senha", host="localhost", port=1521)
+connection = oracledb.connect(user="SYSTEM", password="senha", host="localhost", port=1521)
 cursor = connection.cursor()
 
 
-class EditarProduto():
+class editar_produto():
     def __init__(self, root_parameter):
         # Inicializa a janela principal da aplicação
         self.root = root_parameter
         self.root.title("Editar Produto")
-        self.codigo_de_barras = None  
-        self.root.protocol("WM_DELETE_WINDOW", self.confirm_exit)  # Define o comportamento ao fechar a janela
-        self.editar_design()  # Configura o design da interface
-        self.root.mainloop()  # Mantém a aplicação em execução
+        # Chama o método para configurar o design da interface
+        self.editar_design()
+        # Carrega os produtos na árvore
+        self.carregar_produtos()
+        # Mantém a aplicação em execução
+        self.root.mainloop()
 
-    def fechar_janela_editar_produto(self):
-        # Restaura a janela principal e fecha a janela de edição
-        self.root.deiconify()
-        self.nova_janela.destroy()
- 
-    def confirm_exit(self):
-        """
-        Exibe uma mensagem de confirmação ao sair do programa.
-        """
-        if messagebox.askokcancel("Sair", "Você tem certeza que deseja sair?"):
-            self.root.destroy()
-    
+    def carregar_produtos(self):
+        # Consulta o banco de dados para obter os produtos e carrega-os na árvore
+        sql = "SELECT codigo_de_barras, nome FROM tbl_produtos"
+        cursor.execute(sql)
+        produtos = cursor.fetchall()
+        for produto in produtos:
+            self.codigo, nome = produto
+            self.tree.insert("", "end", values=(self.codigo, nome))
 
-    def consultar_banco_de_dados(self, codigo):
-        # Consulta o banco de dados para obter as informações do produto pelo código de barras
-        sql = """
-            SELECT COUNT(*) FROM tbl_produtos WHERE codigo_de_barras = :CODIGO_DE_BARRAS
-            """
-        cursor.execute(sql, {"CODIGO_DE_BARRAS": codigo})
-        resultado = cursor.fetchone()[0]
-        # Verifica se o produto existe
-        if resultado != 1:
-            messagebox.showerror("Erro", "Produto não encontrado.")
-            return
+    def editar_produtodesign(self):
+        # Configura o design da interface de editar de produtos
+        frame = ctk.CTkFrame(self.root)
+        frame.place(relwidth=1, relheight=1)
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_columnconfigure(1, weight=3)
 
-        sql = """
-        SELECT nome, descricao, preco_de_compra, preco_de_venda, unidades, fornecedor 
-        FROM tbl_produtos WHERE codigo_de_barras = :CODIGO_DE_BARRAS 
-        """
-        cursor.execute(sql, {"CODIGO_DE_BARRAS": codigo})
-        produto = cursor.fetchone()  # Obtém os dados do produto da consulta
-        if produto:
-            self.editar_produto()  # Chama o método para editar o produto
-            # Preenche os campos na interface gráfica com os dados do produto
-            self.entry_nome.delete(0, tk.END)
-            self.entry_nome.insert(0, produto[0])
-            self.entry_descricao.delete(0, tk.END)
-            self.entry_descricao.insert(0, produto[1])
-            self.entry_custo_aquisicao.delete(0, tk.END)
-            self.entry_custo_aquisicao.insert(0, str(produto[2]))
-            self.entry_preco_venda_principal.delete(0, tk.END)
-            self.entry_preco_venda_principal.insert(0, str(produto[3]))
-            self.entry_unidades.delete(0, tk.END)
-            self.entry_unidades.insert(0, str(produto[4]))
-            self.combo_fornecedor.set(produto[5])
-
-    def selecionar_produto(self):
-        # Obtém o código de barras inserido pelo usuário e consulta o banco de dados
-        self.codigo_de_barras = self.entry_codigo_de_barras.get()
-
-        if not self.codigo_de_barras:
-            messagebox.showerror("Erro", "Código de barras inválido.")
-            return
-
-        self.consultar_banco_de_dados(self.codigo_de_barras)
-
-    def atualizar_produto(self):
-        # Obtém os novos dados do produto inseridos pelo usuário e atualiza o banco de dados
-        nome = self.entry_nome.get()
-        descricao = self.entry_descricao.get()
-        preco_compra = float(self.entry_custo_aquisicao.get())
-        preco_venda = float(self.entry_preco_venda_principal.get())
-        unidades = int(self.entry_unidades.get())
-        fornecedor = self.combo_fornecedor.get()
-
-        sql = """
-        UPDATE tbl_produtos 
-        SET nome = :nome, descricao = :descricao, preco_de_compra = :preco_compra, 
-        preco_de_venda = :preco_venda, unidades = :unidades, fornecedor = :fornecedor 
-        WHERE codigo_de_barras = :CODIGO_DE_BARRAS
-        """
-        cursor.execute(sql, {
-            "nome": nome,
-            "descricao": descricao,
-            "preco_compra": preco_compra,
-            "preco_venda": preco_venda,
-            "unidades": unidades,
-            "fornecedor": fornecedor,
-            "CODIGO_DE_BARRAS": self.codigo_de_barras
-        })
-        connection.commit()
-        messagebox.showinfo("Sucesso", "Produto atualizado com sucesso.")
-
-    def editar_produto(self):
-        # Cria uma nova janela para edição do produto
-        self.root.iconify()  # Minimiza a janela principal
-        self.nova_janela = tk.Toplevel(self.root)
-        self.nova_janela.title("Editar Produto")
-        self.nova_janela.config(bg="#2b2b2b")
-        self.nova_janela.protocol("WM_DELETE_WINDOW", self.fechar_janela_editar_produto)  # Define o comportamento ao fechar a janela
-
-        # Adiciona conteúdo à nova janela
-        frame = ctk.CTkFrame(self.nova_janela)
-        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-
-        # Campos de entrada para os dados do produto
+        # Campos de entrada para dados do produto
         label_nome = ctk.CTkLabel(frame, text="Nome:")
-        label_nome.grid(row=0, column=0, sticky=tk.W)
-        self.entry_nome = ctk.CTkEntry(frame, width=50)
-        self.entry_nome.grid(row=0, column=1, sticky=tk.W)
+        label_nome.grid(row=0, column=0, sticky=tk.W, pady=7, padx=15)
+        self.entry_nome = ctk.CTkEntry(frame)
+        self.entry_nome.grid(row=0, column=1, sticky=tk.EW, pady=7, padx=15)
 
         label_descricao = ctk.CTkLabel(frame, text="Descrição:")
-        label_descricao.grid(row=1, column=0, sticky=tk.W)
-        self.entry_descricao = ctk.CTkEntry(frame, width=50)
-        self.entry_descricao.grid(row=1, column=1, sticky=tk.W)
+        label_descricao.grid(row=1, column=0, sticky=tk.W, pady=5, padx=15)
+        self.entry_descricao = ctk.CTkEntry(frame)
+        self.entry_descricao.grid(row=1, column=1, sticky=tk.EW, pady=5, padx=15)
 
         label_custo_aquisicao = ctk.CTkLabel(frame, text="Custo de Aquisição:")
-        label_custo_aquisicao.grid(row=2, column=0, sticky=tk.W)
-        self.entry_custo_aquisicao = ctk.CTkEntry(frame, width=50)
-        self.entry_custo_aquisicao.grid(row=2, column=1, sticky=tk.W)
+        label_custo_aquisicao.grid(row=2, column=0, sticky=tk.W, pady=5, padx=15)
+        self.entry_custo_aquisicao = ctk.CTkEntry(frame)
+        self.entry_custo_aquisicao.grid(row=2, sticky=tk.EW, column=1, pady=5, padx=15)
 
         label_unidades = ctk.CTkLabel(frame, text="Unidades:")
-        label_unidades.grid(row=3, column=0, sticky=tk.W)
-        self.entry_unidades = ctk.CTkEntry(frame, width=50)
-        self.entry_unidades.grid(row=3, column=1, sticky=tk.W)
+        label_unidades.grid(row=3, column=0, sticky=tk.W, pady=5, padx=15)
+        self.entry_unidades = ctk.CTkEntry(frame)
+        self.entry_unidades.grid(row=3, column=1, sticky=tk.EW, pady=5, padx=15)
 
         label_fornecedor = ctk.CTkLabel(frame, text="Fornecedor:")
-        label_fornecedor.grid(row=4, column=0, sticky=tk.W)
-        self.combo_fornecedor = ctk.CTkComboBox(frame, width=47, state="readonly")
-        self.combo_fornecedor['values'] = ("Fornecedor 1", "Fornecedor 2", "Fornecedor 3")  # Adicione os fornecedores
-        self.combo_fornecedor.grid(row=4, column=1, sticky=tk.W)
+        label_fornecedor.grid(row=4, column=0, sticky=tk.W, pady=5, padx=15)
+        self.combo_fornecedor = ctk.CTkComboBox(frame, state="readonly", values=["Fornecedor 1", "Fornecedor 2", "Fornecedor 3"])  # Aqui você pode adicionar os fornecedores cadastrados
+        self.combo_fornecedor.grid(row=4, column=1, sticky=tk.EW, pady=5, padx=15)
 
         label_preco_venda_principal = ctk.CTkLabel(frame, text="Preço de Venda:")
-        label_preco_venda_principal.grid(row=5, column=0, sticky=tk.W)
-        self.entry_preco_venda_principal = ctk.CTkEntry(frame, width=50)
-        self.entry_preco_venda_principal.grid(row=5, column=1, sticky=tk.W)
+        label_preco_venda_principal.grid(row=5, column=0, sticky=tk.W, pady=5, padx=15)
+        self.entry_preco_venda_principal = ctk.CTkEntry(frame)
+        self.entry_preco_venda_principal.grid(row=5, sticky=tk.EW, column=1, pady=5, padx=15)
 
-        # Botão para atualizar os dados do produto
-        button_atualizar = ctk.CTkButton(frame, text="Atualizar Produto", command=self.atualizar_produto)
-        button_atualizar.grid(row=6, column=0, columnspan=2, pady=10)
+        # Frame para botões
+        buttons_frame = ctk.CTkFrame(frame, fg_color="#2b2b2b")
+        buttons_frame.grid_columnconfigure((0, 1), weight=1)
+        buttons_frame.grid(row=6, column=0, columnspan=2, pady=4)
+
+        # Botão para editar
+        button_cadastrar = ctk.CTkButton(buttons_frame, text="Editar Produto", command=self.confirmar_editar)
+        button_cadastrar.grid(row=0, column=0, padx=5, sticky=tk.W)
+    
+    def confirmar_editar(self):
+        print()
+
+    def buscar_produto(self):
+        # Busca um produto pelo código
+        codigo_busca = self.entry_codigo.get()
+        sql = "SELECT codigo_de_barras, nome FROM tbl_produtos WHERE codigo_de_barras = :CODIGO_DE_BARRAS"
+        cursor.execute(sql, {"CODIGO_DE_BARRAS": codigo_busca})
+        produto = cursor.fetchone()
+        if produto:
+            self.codigo, self.nome = produto
+            # Limpa a árvore e exibe o produto encontrado
+            self.tree.delete(*self.tree.get_children())
+            self.tree.insert("", "end", values=(self.codigo, self.nome))
+        else:
+            # Exibe uma mensagem de erro se o produto não for encontrado
+            messagebox.showerror("Erro", "Produto não encontrado.")
 
     def editar_design(self):
-        # Configura o design da interface de edição
-        frame = ctk.CTkFrame(self.root)
-        frame.place(relx=1, rely=1)
-        frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        # Configura o design da interface gráfica
+        self.frame = ctk.CTkFrame(self.root)
+        self.frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-        # Campo de entrada para o código de barras do produto
-        label_codigo_de_barras = ctk.CTkLabel(frame, text="Digite o código de barras do produto:", text_color="white")
-        label_codigo_de_barras.grid(row=0, column=0, sticky=tk.W, padx=4, pady=3)
-        self.entry_codigo_de_barras = ctk.CTkEntry(frame, width=100)
-        self.entry_codigo_de_barras.grid(row=0, column=1, sticky=tk.W, padx=4, pady=3)
+        # Adiciona um título à janela
+        label_titulo = ctk.CTkLabel(self.frame, text="Lista de Produtos",text_color="#f9f6ee")
+        label_titulo.grid(row=0, column=0, sticky=tk.W)
 
-        # Botão para encontrar o produto pelo código de barras
-        button_encontrar_produto = ctk.CTkButton(frame, text="Procurar Produto", command=self.selecionar_produto,
-                                                 text_color="white")
-        button_encontrar_produto.grid(row=1, column=0, columnspan=2, pady=10)
+        # Cria uma árvore para exibir os produtos
+        self.tree = ttk.Treeview(self.frame, columns=("Código de Barras", "Nome"), show="headings")
+        self.tree.column("0",minwidth=0,width=280)
+        self.tree.column("1",minwidth=0,width=280)
+        self.tree.heading("Código de Barras", text="Código de Barras")
+        self.tree.heading("Nome", text="Nome")
+        self.tree.grid(row=0, column=0, sticky=tk.W)
 
+        # Configura o frame para busca de produto
+        frame_busca = ctk.CTkFrame(self.frame, fg_color="#2b2b2b")
+        frame_busca.place(relwidth=1, relheight=1)
+        frame_busca.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        frame_busca.columnconfigure(0, weight=1)
+
+        # Adiciona um campo de entrada e um botão para buscar produto por código
+        label_codigo = ctk.CTkLabel(frame_busca, text="Código do Produto:", fg_color="#2b2b2b")
+        label_codigo.grid(row=1, columnspan=2, sticky=tk.W,padx=3)
+        self.entry_codigo = ctk.CTkEntry(frame_busca)
+        self.entry_codigo.grid(row=1, column=1, sticky=tk.W)
+
+        button_buscar = ctk.CTkButton(frame_busca, text="Buscar Produto", command=self.buscar_produto)
+        button_buscar.grid(row=1, column=2, sticky=tk.W,padx=5)
+        
+        # Adiciona um botão para editar produto
+        button_excluir = ctk.CTkButton(frame_busca, text="Editar Produto", command=self.editar_produtodesign)
+        button_excluir.grid(row=1, column=3, sticky=tk.W, padx=5)
 
 if __name__ == "__main__":
-    # Inicializa a aplicação
+    # Inicia a aplicação
     root = ctk.CTk()
-    EditarProduto(root)
+    editar_produto(root)
