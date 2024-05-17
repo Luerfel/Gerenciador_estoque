@@ -15,7 +15,7 @@ class CadastrarProduto:
         # Configurações iniciais da janela principal
         self.root = root
         self.root.title("Cadastro de Produtos")
-        self.root.geometry("450x270")
+        self.root.geometry("600x300")
         self.root.resizable(False, False)
         self.root.maxheight = 150
         
