@@ -2,6 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox
 import oracledb
+import fc
 from calculo_venda import CalculadoraPrecoVenda
 
 # Estabelece a conexão com o banco de dados Oracle.
@@ -119,26 +120,51 @@ class EditarProduto():
             unidades = self.entry_unidades.get()
             fornecedor = self.combo_fornecedor.get()
             preco_de_venda = self.entry_preco_venda_principal.get()
-            sql = """
-            UPDATE tbl_produtos
-            SET nome = :NOME, descricao = :DESCRICAO, preco_de_compra = :PRECO_DE_COMPRA, unidades = :UNIDADES,
-                fornecedor = :FORNECEDOR, preco_de_venda = :PRECO_DE_VENDA
-            WHERE codigo_de_barras = :CODIGO_DE_BARRAS
-            """
-            cursor.execute(sql, {
-                "NOME": nome,
-                "DESCRICAO": descricao,
-                "PRECO_DE_COMPRA": preco_de_compra,
-                "UNIDADES": unidades,
-                "FORNECEDOR": fornecedor,
-                "PRECO_DE_VENDA": preco_de_venda,
-                "CODIGO_DE_BARRAS": self.codigo
-            })
-            connection.commit()
-            messagebox.showinfo("Sucesso", "Produto atualizado com sucesso.")
-        else:
-            messagebox.showerror("Erro", "Nenhum produto selecionado para edição.")
 
+            # Validações dos campos
+            if not fc.validar_nvarchar2(nome, 50, 1):
+                return
+            if not fc.validar_nvarchar2(descricao, 50, 0):
+                return
+            if not fc.validar_number("preço de venda", preco_de_venda, 1):
+                return
+            if not fc.validar_number("preço de compra", preco_de_compra, 1):
+                return
+            if not fc.validar_number("unidades", unidades, 1):
+                return
+
+            # Converte valores para tipos apropriados
+            preco_de_venda = preco_de_venda.replace(',', '.')
+            preco_de_venda = float(preco_de_venda)
+
+            preco_de_compra = preco_de_compra.replace(',', '.')
+            preco_de_compra = float(preco_de_compra)
+
+            unidades = unidades.replace(',', '.')
+            unidades = int(unidades)
+
+            try:
+                sql = """
+                UPDATE tbl_produtos
+                SET nome = :NOME, descricao = :DESCRICAO, preco_de_compra = :PRECO_DE_COMPRA, unidades = :UNIDADES,
+                    fornecedor = :FORNECEDOR, preco_de_venda = :PRECO_DE_VENDA
+                WHERE codigo_de_barras = :CODIGO_DE_BARRAS
+                """
+                cursor.execute(sql, {
+                    "NOME": nome,
+                    "DESCRICAO": descricao,
+                    "PRECO_DE_COMPRA": preco_de_compra,
+                    "UNIDADES": unidades,
+                    "FORNECEDOR": fornecedor,
+                    "PRECO_DE_VENDA": preco_de_venda,
+                    "CODIGO_DE_BARRAS": self.codigo
+                })
+                connection.commit()
+                messagebox.showinfo("Sucesso", "Produto atualizado com sucesso.")
+            except oracledb.Error as e:
+                messagebox.showerror("Erro", f"Falha ao atualizar o produto: {str(e)}")
+            else:
+                messagebox.showerror("Erro", "Nenhum produto selecionado para edição.")
     def editar_design(self):
         self.frame = ctk.CTkFrame(self.root)
         self.frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
