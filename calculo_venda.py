@@ -5,9 +5,10 @@ import customtkinter as ctk
 import fc
 
 class CalculadoraPrecoVenda:
-    def __init__(self, root):
+    def __init__(self, root, entry_preco_venda_principal):
         self.root = root
         self.root.title("Calculadora de Preço de Venda")
+        self.entry_preco_venda_principal = entry_preco_venda_principal
         self.connection = self.conectar_banco()
         self.cursor = self.connection.cursor() if self.connection else None
         self.tela_calculo_venda()
@@ -121,7 +122,7 @@ class CalculadoraPrecoVenda:
         btn_calcular_preco_venda = ctk.CTkButton(frame, text="Calcular Preço de Venda", command=self.calcular_preco_venda)
         btn_calcular_preco_venda.grid(row=12, column=0, sticky=tk.W, pady=5, padx=5)
 
-        btn_voltar = ctk.CTkButton(frame, text="Voltar", command=self.voltar_janela)
+        btn_voltar = ctk.CTkButton(frame, text="Salvar", command=self.salvar)
         btn_voltar.grid(row=12, column=1, sticky=tk.W, pady=5, padx=5)
 
     def atualizar_status_margem_lucro(self):
@@ -142,7 +143,12 @@ class CalculadoraPrecoVenda:
         self.nova_janela.destroy()
         self.root.deiconify()
 
-    def voltar_janela(self):
+    def salvar(self):
+        preco_venda = self.entry_preco_venda.get()
+        self.entry_preco_venda_principal.configure(state="normal")
+        self.entry_preco_venda_principal.delete(0, tk.END)
+        self.entry_preco_venda_principal.insert(0, preco_venda)
+        self.entry_preco_venda_principal.configure(state="readonly")
         self.nova_janela.destroy()
         self.root.deiconify()
 
