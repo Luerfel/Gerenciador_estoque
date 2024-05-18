@@ -1,9 +1,8 @@
 import customtkinter as ctk  # Importa a biblioteca personalizada de tkinter com alias "ctk"
 from tkinter import messagebox  # Importa a classe de messagebox do módulo tkinter
-from commons import Commons  # Importa a classe Commons do módulo commons
 from TelaMain import MainScreen  # Importa a classe MainScreen do módulo TelaMain
 
-class TelaLogin(Commons):
+class TelaLogin:
     def __init__(self, root_parameter):
         """
         Inicializa a tela de login.

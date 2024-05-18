@@ -6,9 +6,7 @@ import oracledb
 import customtkinter as ctk
 from calculo_venda import CalculadoraPrecoVenda
 
-# Conexão com o banco de dados Oracle
-connection = oracledb.connect(user="SYSTEM", password="senha", host="localhost", port=1521)
-cursor = connection.cursor()
+
 
 class CadastrarProduto:
     def __init__(self, root):
@@ -18,7 +16,11 @@ class CadastrarProduto:
         self.root.geometry("600x300")
         self.root.resizable(False, False)
         self.root.maxheight = 150
-        
+        self.connection = fc.conectar_banco()
+        self.cursor = self.connection.cursor()
+        if not self.connection:
+            self.root.destroy()  # Fecha a aplicação se a conexão falhar
+            return
         # Chama a função para desenhar a interface de cadastro
         self.cadastro_design()
         
@@ -41,8 +43,8 @@ class CadastrarProduto:
             # Gera um código de barras de 13 dígitos
             self.codigo = "".join(str(random.randint(0, 9)) for _ in range(13))
             sql = "SELECT COUNT(*) FROM tbl_produtos WHERE codigo_de_barra = :codigo_de_barra"
-            cursor.execute(sql, {"CODIGO_DE_BARRAS": self.codigo})
-            resultado = cursor.fetchone()[0]
+            self.cursor.execute(sql, {"CODIGO_DE_BARRAS": self.codigo})
+            resultado = self.cursor.fetchone()[0]
             if resultado > 0:
                 return self.gerar_codigo_barra()  # Gera novamente se o código já existir
         except:
@@ -139,7 +141,7 @@ class CadastrarProduto:
 
         # Tenta inserir o produto no banco de dados
         try:
-            cursor.execute("""
+            self.cursor.execute("""
             INSERT INTO tbl_produtos (nome, descricao, codigo_de_barras, preco_de_compra, preco_de_venda, unidades, fornecedor)
             VALUES (:nome, :descricao, :codigo_de_barras, :preco_de_compra, :preco_de_venda, :unidades, :fornecedor)
             """, {
@@ -152,7 +154,7 @@ class CadastrarProduto:
                 'fornecedor': self.fornecedor
             })
 
-            connection.commit()  # Confirma a transação
+            self.connection.commit()  # Confirma a transação
 
         except oracledb.DatabaseError as e:
             return

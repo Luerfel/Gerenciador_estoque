@@ -1,48 +1,32 @@
-
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox
 import oracledb
-
-# biblioteca da oracle
-
-# Estabelece a conexão com o banco de dados Oracle.
-
-# **Observações:**
-
-# * Este código utiliza um banco de dados local para armazenar as informações.
-# * Altere as variáveis `user`, `password`, `dsn` e `sid` para conectar-se ao seu banco de dados.
-
-# **Detalhes da conexão:**
-
-# * **user:** Nome de usuário do banco de dados.
-# * **password:** Senha do banco de dados.
-# * **host:** Nome do serviço do banco de dados.
-# * **sid:** SID (System Identifier) do banco de dados.
-
-# Caso seja a primeira vez Por favor Gere a tabela com o GerarTabela.py
-
-connection = oracledb.connect(user="SYSTEM", password="senha", host="localhost", port=1521)
-cursor = connection.cursor()
-
-
+import fc
 class ExcluirProduto():
     def __init__(self, root_parameter):
         # Inicializa a janela principal da aplicação
         self.root = root_parameter
         self.root.title("Excluir Produto")
-        # Chama o método para configurar o design da interface
-        self.excluir_design()
-        # Carrega os produtos na árvore
-        self.carregar_produtos()
+        # Inicializa a conexão e o cursor do banco de dados
+        self.connection = fc.conectar_banco()
+        if self.connection:
+            self.cursor = self.connection.cursor()
+            # Chama o método para configurar o design da interface
+            self.excluir_design()
+            # Carrega os produtos na árvore
+            self.carregar_produtos()
+        else:
+            messagebox.showerror("Erro", "Não foi possível conectar ao banco de dados.")
+            self.root.destroy()
         # Mantém a aplicação em execução
         self.root.mainloop()
 
     def carregar_produtos(self):
         # Consulta o banco de dados para obter os produtos e carrega-os na árvore
         sql = "SELECT codigo_de_barras, nome FROM tbl_produtos"
-        cursor.execute(sql)
-        produtos = cursor.fetchall()
+        self.cursor.execute(sql)
+        produtos = self.cursor.fetchall()
         for produto in produtos:
             self.codigo, nome = produto
             self.tree.insert("", "end", values=(self.codigo, nome))
@@ -67,8 +51,8 @@ class ExcluirProduto():
     def excluir_produto(self, codigo):
         # Remove o produto do banco de dados
         sql = "DELETE FROM tbl_produtos WHERE codigo_de_barras = :CODIGO_DE_BARRAS"
-        cursor.execute(sql, {"CODIGO_DE_BARRAS": codigo})
-        connection.commit()
+        self.cursor.execute(sql, {"CODIGO_DE_BARRAS": codigo})
+        self.connection.commit()
         # Exibe uma mensagem de sucesso após a exclusão
         messagebox.showinfo("Sucesso", "Produto excluído com sucesso.")
         # Limpa a árvore e recarrega os produtos após a exclusão
@@ -79,8 +63,8 @@ class ExcluirProduto():
         # Busca um produto pelo código
         codigo_busca = self.entry_codigo.get()
         sql = "SELECT codigo_de_barras, nome FROM tbl_produtos WHERE codigo_de_barras = :CODIGO_DE_BARRAS"
-        cursor.execute(sql, {"CODIGO_DE_BARRAS": codigo_busca})
-        produto = cursor.fetchone()
+        self.cursor.execute(sql, {"CODIGO_DE_BARRAS": codigo_busca})
+        produto = self.cursor.fetchone()
         if produto:
             self.codigo, self.nome = produto
             # Limpa a árvore e exibe o produto encontrado
