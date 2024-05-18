@@ -203,9 +203,9 @@ class EditarProduto():
         self.entry_preco_venda_principal = ctk.CTkEntry(self.frame_editar)
         self.entry_preco_venda_principal.grid(row=5, column=1, sticky=tk.EW, pady=5, padx=15)
 
-        # Botões de Ação
+        # Botões
         button_calcular_preco_venda = ctk.CTkButton(self.frame_editar, text="Calcular Preço de Venda", command=self.acessar_calculadora_preco_venda)
-        button_calcular_preco_venda.grid(row=6, column=0, pady=7, padx=5, sticky=tk.W)
+        button_calcular_preco_venda.grid(row=5, column=2, pady=7, padx=5, sticky=tk.W)
         button_confirmar_edicao = ctk.CTkButton(self.frame_editar, text="Confirmar", command=self.atualizar_produto)
         button_confirmar_edicao.grid(row=6, column=1, pady=7, padx=5, sticky=tk.E)
 
