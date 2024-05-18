@@ -20,7 +20,13 @@ class CalculadoraPrecoVenda:
             co = float(self.entry_percentual_custo_operacional.get())
             ml = float(self.margem_lucro_var.get())
             cv = float(self.entry_comissao_venda.get())
-            preco_venda = ca / (1 - ((iv + cf + co + ml + cv) / 100))
+            
+            total_percentage = iv + cf + co + ml + cv
+
+            if total_percentage >= 100:
+                raise ValueError("A soma das porcentagens não pode ser maior ou igual a 100%")
+
+            preco_venda = ca / (1 - (total_percentage / 100))
 
             composicao = {
                 "Custo do Produto": ca,
@@ -33,9 +39,10 @@ class CalculadoraPrecoVenda:
 
             self.atualizar_preco_venda(preco_venda)
             self.atualizar_descricao(preco_venda, composicao)
-        except ValueError:
+        except ValueError as e:
             self.atualizar_preco_venda("Erro")
-            self.label_composicao_preco.configure(text="Erro ao calcular a composição do preço")
+            self.label_composicao_preco.configure(text=f"Erro ao calcular a composição do preço: {str(e)}")
+
 
     def atualizar_preco_venda(self, preco):
         self.entry_preco_venda.configure(state="normal")
@@ -72,7 +79,6 @@ class CalculadoraPrecoVenda:
         self.nova_janela.title("Calculadora de Preço de Venda")
         self.nova_janela.resizable(False, False)
         self.nova_janela.protocol("WM_DELETE_WINDOW", self.fechar_janela_calculo)
-
         frame = ctk.CTkFrame(self.nova_janela)
         frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -193,7 +199,7 @@ class CalculadoraPrecoVenda:
         self.descricao_frame.grid_columnconfigure(2, weight=1)
 
         # Labels para os cabeçalhos das descrições
-        label_header_descricao = ctk.CTkLabel(self.descricao_frame, text="Descricão")
+        label_header_descricao = ctk.CTkLabel(self.descricao_frame, text="Descrição")
         label_header_descricao.grid(row=0, column=0)
 
         label_desc_preco_venda = ctk.CTkLabel(self.descricao_frame, text="A.Preço de Venda")
@@ -202,8 +208,8 @@ class CalculadoraPrecoVenda:
         label_desc_custo_aquisicao = ctk.CTkLabel(self.descricao_frame, text="B.Custo de Aquisição")
         label_desc_custo_aquisicao.grid(row=2, column=0)
 
-        label_desc_receita_bruta = ctk.CTkLabel(self.descricao_frame, text="C.Custo Operacional")
-        label_desc_receita_bruta.grid(row=3, column=0)
+        label_desc_custo_operacional = ctk.CTkLabel(self.descricao_frame, text="C.Custo Operacional")
+        label_desc_custo_operacional.grid(row=3, column=0)
 
         label_desc_custo_fixo = ctk.CTkLabel(self.descricao_frame, text="D.Custo Fixo")
         label_desc_custo_fixo.grid(row=4, column=0)
@@ -211,39 +217,67 @@ class CalculadoraPrecoVenda:
         label_desc_impostos = ctk.CTkLabel(self.descricao_frame, text="E.Impostos")
         label_desc_impostos.grid(row=5, column=0)
 
-        self.label_val_preco_venda = ctk.CTkLabel(self.descricao_frame, text="R$ 0.00")
-        self.label_val_preco_venda.grid(row=1, column=1, sticky=tk.W, pady=5, padx=2)
+        label_desc_margem_lucro = ctk.CTkLabel(self.descricao_frame, text="F.Margem de Lucro")
+        label_desc_margem_lucro.grid(row=6, column=0)
 
-        self.label_val_custo_aquisicao = ctk.CTkLabel(self.descricao_frame, text="R$ 0.00")
-        self.label_val_custo_aquisicao.grid(row=2, column=1, sticky=tk.W, pady=2, padx=2)
-        self.label_perc_custo_aquisicao = ctk.CTkLabel(self.descricao_frame, text="0.00%")
-        self.label_perc_custo_aquisicao.grid(row=2, column=2, sticky=tk.W, pady=2, padx=2)
+        label_desc_comissao_venda = ctk.CTkLabel(self.descricao_frame, text="G.Comissão de Venda")
+        label_desc_comissao_venda.grid(row=7, column=0)
 
-        self.label_val_impostos = ctk.CTkLabel(self.descricao_frame, text="R$ 0.00")
-        self.label_val_impostos.grid(row=5, column=1, sticky=tk.W, pady=2, padx=2)
-        self.label_perc_impostos = ctk.CTkLabel(self.descricao_frame, text="0.00%")
-        self.label_perc_impostos.grid(row=5, column=2, sticky=tk.W, pady=2, padx=2)
+        # Subframe para valores e percentuais
+        self.descricao_subframe = ctk.CTkFrame(self.descricao_frame)
+        self.descricao_subframe.grid(row=0, rowspan=8, column=2, sticky="ew")
+        self.descricao_subframe.grid_columnconfigure(0, weight=1)
+        self.descricao_subframe.grid_columnconfigure(1, weight=1)
 
-        self.label_val_custo_fixo = ctk.CTkLabel(self.descricao_frame, text="R$ 0.00")
-        self.label_val_custo_fixo.grid(row=4, column=1, sticky=tk.W, pady=2, padx=2)
-        self.label_perc_custo_fixo = ctk.CTkLabel(self.descricao_frame, text="0.00%")
-        self.label_perc_custo_fixo.grid(row=4, column=2, sticky=tk.W, pady=2, padx=2)
+        # Labels para valores
+        label_header_valor = ctk.CTkLabel(self.descricao_subframe, text="Valor")
+        label_header_valor.grid(row=0, column=0, padx=16, pady=3)
 
-        self.label_val_custo_operacional = ctk.CTkLabel(self.descricao_frame, text="R$ 0.00")
-        self.label_val_custo_operacional.grid(row=3, column=1, sticky=tk.W, pady=2, padx=2)
-        self.label_perc_custo_operacional = ctk.CTkLabel(self.descricao_frame, text="0.00%")
-        self.label_perc_custo_operacional.grid(row=3, column=2, sticky=tk.W, pady=2, padx=2)
+        self.label_val_preco_venda = ctk.CTkLabel(self.descricao_subframe, text="R$ 0.00")
+        self.label_val_preco_venda.grid(row=1, column=0, padx=16, pady=3)
 
-        self.label_val_margem_lucro = ctk.CTkLabel(self.descricao_frame, text="R$ 0.00")
-        self.label_val_margem_lucro.grid(row=18, column=0, sticky=tk.W, pady=2, padx=2)
-        self.label_perc_margem_lucro = ctk.CTkLabel(self.descricao_frame, text="0.00%")
-        self.label_perc_margem_lucro.grid(row=18, column=1, sticky=tk.W, pady=2, padx=2)
+        self.label_val_custo_aquisicao = ctk.CTkLabel(self.descricao_subframe, text="R$ 0.00")
+        self.label_val_custo_aquisicao.grid(row=2, column=0, padx=16, pady=3)
 
-        self.label_val_comissao_venda = ctk.CTkLabel(self.descricao_frame, text="R$ 0.00")
-        self.label_val_comissao_venda.grid(row=19, column=0, sticky=tk.W, pady=2, padx=2)
-        self.label_perc_comissao_venda = ctk.CTkLabel(self.descricao_frame, text="0.00%")
-        self.label_perc_comissao_venda.grid(row=19, column=1, sticky=tk.W, pady=2, padx=2)
+        self.label_val_custo_operacional = ctk.CTkLabel(self.descricao_subframe, text="R$ 0.00")
+        self.label_val_custo_operacional.grid(row=3, column=0, padx=16, pady=3)
 
+        self.label_val_custo_fixo = ctk.CTkLabel(self.descricao_subframe, text="R$ 0.00")
+        self.label_val_custo_fixo.grid(row=4, column=0, padx=16, pady=3)
+
+        self.label_val_impostos = ctk.CTkLabel(self.descricao_subframe, text="R$ 0.00")
+        self.label_val_impostos.grid(row=5, column=0, padx=16, pady=3)
+
+        self.label_val_margem_lucro = ctk.CTkLabel(self.descricao_subframe, text="R$ 0.00")
+        self.label_val_margem_lucro.grid(row=6, column=0, padx=16, pady=3)
+
+        self.label_val_comissao_venda = ctk.CTkLabel(self.descricao_subframe, text="R$ 0.00")
+        self.label_val_comissao_venda.grid(row=7, column=0, padx=16, pady=3)
+
+        # Labels para percentuais
+        label_header_percentual = ctk.CTkLabel(self.descricao_subframe, text="%")
+        label_header_percentual.grid(row=0, column=1, padx=16, pady=3)
+
+        self.label_perc_preco_venda = ctk.CTkLabel(self.descricao_subframe, text="0.00%")
+        self.label_perc_preco_venda.grid(row=1, column=1, padx=16, pady=3)
+
+        self.label_perc_custo_aquisicao = ctk.CTkLabel(self.descricao_subframe, text="0.00%")
+        self.label_perc_custo_aquisicao.grid(row=2, column=1, padx=16, pady=3)
+
+        self.label_perc_custo_operacional = ctk.CTkLabel(self.descricao_subframe, text="0.00%")
+        self.label_perc_custo_operacional.grid(row=3, column=1, padx=16, pady=3)
+
+        self.label_perc_custo_fixo = ctk.CTkLabel(self.descricao_subframe, text="0.00%")
+        self.label_perc_custo_fixo.grid(row=4, column=1, padx=16, pady=3)
+
+        self.label_perc_impostos = ctk.CTkLabel(self.descricao_subframe, text="0.00%")
+        self.label_perc_impostos.grid(row=5, column=1, padx=16, pady=3)
+
+        self.label_perc_margem_lucro = ctk.CTkLabel(self.descricao_subframe, text="0.00%")
+        self.label_perc_margem_lucro.grid(row=6, column=1, padx=16, pady=3)
+
+        self.label_perc_comissao_venda = ctk.CTkLabel(self.descricao_subframe, text="0.00%")
+        self.label_perc_comissao_venda.grid(row=7, column=1, padx=16, pady=3)
 
 
 if __name__ == "__main__":
