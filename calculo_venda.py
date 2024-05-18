@@ -9,16 +9,9 @@ class CalculadoraPrecoVenda:
         self.root = root
         self.root.title("Calculadora de Preço de Venda")
         self.entry_preco_venda_principal = entry_preco_venda_principal
-        self.connection = self.conectar_banco()
-        self.cursor = self.connection.cursor() if self.connection else None
+        self.connection = fc.conectar_banco()
+        self.cursor = self.connection.cursor()
         self.tela_calculo_venda()
-
-    def conectar_banco(self):
-        try:
-            return oracledb.connect(user="SYSTEM", password="senha", host="localhost", port=1521)
-        except oracledb.DatabaseError as e:
-            messagebox.showerror("Erro de conexão", f"Não foi possível conectar ao banco de dados: {e}")
-            return None
 
     def calcular_preco_venda(self):
         try:

@@ -1,37 +1,29 @@
-# Importação das bibliotecas necessárias
 import tkinter as tk  # Biblioteca padrão do Tkinter para a criação de interfaces gráficas
 import customtkinter as ctk  # Biblioteca customizada para estilização do Tkinter
 from tkinter import ttk, messagebox  # Importa componentes adicionais do Tkinter
 import oracledb  # Biblioteca para conectar-se ao banco de dados Oracle
-
-# **Observações:**
-# Este código utiliza um banco de dados local para armazenar as informações.
-# Altere as variáveis `user`, `password`, `host`, `port` para conectar-se ao seu banco de dados.
-
-# **Detalhes da conexão:**
-# * **user:** Nome de usuário do banco de dados.
-# * **password:** Senha do banco de dados.
-# * **host:** Nome do serviço do banco de dados.
-# * **port:** Porta do serviço do banco de dados.
-
-# Estabelece a conexão com o banco de dados Oracle.
-connection = oracledb.connect(user="SYSTEM", password="senha", host="localhost", port=1521)
-cursor = connection.cursor()  
+import fc
 
 # Classe para a janela de consulta de produtos
 class ConsultarProduto():
     def __init__(self, root_parameter):
         self.root = root_parameter  # Janela principal da aplicação
         self.root.title("Consultar Produto")  # Define o título da janela
-        self.consultar_design()  # Chama o método para desenhar a interface
-        self.carregar_produtos()  # Carrega os produtos existentes no banco de dados
+        self.connection = fc.conectar_banco()  # Conecta ao banco de dados
+        if self.connection:
+            self.cursor = self.connection.cursor()
+            self.consultar_design()  # Chama o método para desenhar a interface
+            self.carregar_produtos()  # Carrega os produtos existentes no banco de dados
+        else:
+            messagebox.showerror("Erro", "Não foi possível conectar ao banco de dados.")
+            self.root.destroy()
         self.root.mainloop()  # Inicia o loop principal da interface gráfica
 
     # Método para carregar os produtos do banco de dados na árvore de visualização
     def carregar_produtos(self):
         sql = "SELECT codigo_de_barras, nome, descricao, preco_de_compra, preco_de_venda, fornecedor FROM tbl_produtos"
-        cursor.execute(sql)  # Executa o comando SQL
-        produtos = cursor.fetchall()  # Busca todos os resultados da consulta
+        self.cursor.execute(sql)  # Executa o comando SQL
+        produtos = self.cursor.fetchall()  # Busca todos os resultados da consulta
         for produto in produtos:  # Itera sobre os produtos retornados
             codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor = produto  # Desempacota os valores do produto
             self.tree.insert("", "end", values=(codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor))  # Insere os produtos na árvore
@@ -44,8 +36,8 @@ class ConsultarProduto():
             sql = "SELECT codigo_de_barras, nome, descricao, preco_de_compra, preco_de_venda, fornecedor FROM tbl_produtos WHERE codigo_de_barras = :TERMOS_BUSCA"
         else:  # Caso contrário, a busca será por nome
             sql = "SELECT codigo_de_barras, nome, descricao, preco_de_compra, preco_de_venda, fornecedor FROM tbl_produtos WHERE nome LIKE :TERMOS_BUSCA"
-        cursor.execute(sql, {"TERMOS_BUSCA": termo_busca})  # Executa o comando SQL com o termo de busca
-        resultados = cursor.fetchall()  
+        self.cursor.execute(sql, {"TERMOS_BUSCA": termo_busca})  # Executa o comando SQL com o termo de busca
+        resultados = self.cursor.fetchall()  
         if resultados:  #
             self.tree.delete(*self.tree.get_children())  # 
             for produto in resultados:  

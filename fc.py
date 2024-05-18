@@ -3,26 +3,25 @@ import random
 import customtkinter as ctk
 from tkinter import messagebox
 import tkinter as tk
+import oracledb
 
 
-def calcular_preco_venda(entry_preco_venda_principal,entry_preco_venda,entry_custo_imposto, entry_margem_lucro, entry_comissao_venda, entry_custo_produto, entry_percentual_custo_fixo, entry_percentual_custo_operacional):
-        ca = float(entry_custo_produto.get())
-        iv = float(entry_custo_imposto.get())
-        cf = float(entry_percentual_custo_fixo.get())
-        co = float(entry_percentual_custo_operacional.get())
-        ml = float(entry_margem_lucro.get())
-        cv = float(entry_comissao_venda.get())
-        preco_venda = ca / (1 - ((iv + cf + co + ml + cv) / 100))
-        try:
-            entry_preco_venda.configure(state="normal")
-            entry_preco_venda.delete(0, tk.END)
-            entry_preco_venda.insert(0, "{:.2f}".format(preco_venda))
-            entry_preco_venda.configure(state="readonly") 
-        except:
-            entry_preco_venda.configure(state="normal")
-            entry_preco_venda.delete(0, tk.END)
-            entry_preco_venda.insert(0, "Erro")
-            entry_preco_venda.configure(state="readonly")
+def conectar_banco():
+ # **Observações:**
+# Este código utiliza um banco de dados local para armazenar as informações.
+# Altere as variáveis `user`, `password`, `host`, `port` para conectar-se ao seu banco de dados.
+
+# **Detalhes da conexão:**
+# * **user:** Nome de usuário do banco de dados.
+# * **password:** Senha do banco de dados.
+# * **host:** Nome do serviço do banco de dados.
+# * **port:** Porta do serviço do banco de dados.
+
+    try:
+        return oracledb.connect(user="SYSTEM", password="senha", host="localhost", port=1521)
+    except oracledb.DatabaseError as e:
+        messagebox.showerror("Erro de conexão", f"Não foi possível conectar ao banco de dados: {e}")
+        return None
 
 def limpar_tela():
     # Usado para a limpeza da tela do sistema operacional windowns e linux.
@@ -30,9 +29,6 @@ def limpar_tela():
         os.system('cls')  # windowns
     else:
         os.system('clear')  # linux
-
-
-
 
 def validar_nvarchar2(campo, tam, not_null):
     """
@@ -54,7 +50,6 @@ def validar_nvarchar2(campo, tam, not_null):
         return False
 
     return True
-
 
 def validar_number(campo, valor, not_null):
     """
@@ -78,7 +73,6 @@ def validar_number(campo, valor, not_null):
         return False
 
     return True
-
 
 def calcular_custos_e_percentuais(entry_rendimento_mensal, entry_custo_fixo, entry_custo_mercadoria,
                                   entry_custo_operacional, entry_percentual_custo_fixo,
@@ -187,4 +181,3 @@ def calcular_custos_e_percentuais(entry_rendimento_mensal, entry_custo_fixo, ent
 
         label_perc_impostos = ctk.CTkLabel(self.descricao_subframe, text="X%")
         label_perc_impostos.grid(row=5, column=1, padx=16, pady=3)
-    
