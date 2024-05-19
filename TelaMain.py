@@ -5,7 +5,7 @@ import customtkinter as ctk
 import oracledb
 import subprocess
 from datetime import datetime
-
+import fc
 class MainScreen:
     """
     Classe para a tela principal do sistema de gerenciamento de estoque.
@@ -19,7 +19,6 @@ class MainScreen:
             root_parameter (tk.Tk): A janela principal do aplicativo.
         """
         self.root = root_parameter
-        self.conectar_bd()
         self.montar_tela_principal()
         self.ajustar_grid()
         self.buttons_design()
@@ -27,22 +26,16 @@ class MainScreen:
         self.entry_info()
         self.criar_label_total()
         self.setup_bindings()
+        self.connection = fc.conectar_banco()
         self.root.protocol("WM_DELETE_WINDOW", self.confirm_exit)
+        if self.connection:
+            self.cursor = self.connection.cursor()
+        else:
+            messagebox.showerror("Erro", "Não foi possível conectar ao banco de dados.")
+            self.root.destroy()
         self.root.mainloop()
 
-    def conectar_bd(self):
-        """
-        Conecta ao banco de dados Oracle.
-        """
-        try:
-            self.connection = oracledb.connect(user="SYSTEM", password="senha", host="localhost", port=1521)
-            self.cursor = self.connection.cursor()
-            print("Conexão ao banco de dados realizada com sucesso.")
-        except oracledb.DatabaseError as e:
-            error, = e.args
-            print(f"Erro ao conectar ao banco de dados: {error.message}")
-            messagebox.showerror("Erro de Conexão", "Não foi possível conectar ao banco de dados. Verifique suas credenciais e tente novamente.")
-            self.root.destroy()
+
 
     def ajustar_grid(self):
         """
@@ -352,14 +345,49 @@ class MainScreen:
 
 
     def concluir_venda(self, event=None):
+        # Verifica se há itens na venda
         if not self.tree.get_children():
             messagebox.showwarning("Aviso", "Não há itens na venda.")
             return
 
         def salvar_venda():
-            # Calcula o valor total da venda somando os valores de todos os itens na árvore
-            total_venda = sum(float(self.tree.item(item, 'values')[3].replace('R$', '').replace(',', '').strip()) for item in self.tree.get_children())
+            try:
+                # Calcula o valor total da venda
+                total_venda = calcular_total_venda()
+                
+                # Obtém e valida as formas de pagamento
+                pagamento, formas_pagamento = obter_pagamento()
+                if not validar_pagamento(pagamento, total_venda):
+                    return
+                
+                # Obtém a data e horário atual
+                data_venda, horario_venda = obter_data_horario_venda()
+                
+                # Insere a venda na tabela TBL_VENDAS e obtém o ID da venda
+                venda_id = inserir_venda(data_venda, horario_venda, total_venda, formas_pagamento)
+                
+                # Insere os itens da venda na tabela TBL_ITENS_VENDA e atualiza o estoque
+                inserir_itens_venda_e_atualizar_estoque(venda_id)
+                
+                # Confirma as mudanças no banco de dados
+                self.connection.commit()
+                
+                # Conclui o processamento, limpando os campos e exibindo mensagem de sucesso
+                concluir_processamento()
+                
+                # Fecha a janela de pagamento
+                janela_pagamento.destroy()
 
+            except oracledb.DatabaseError as e:
+                error, = e.args
+                messagebox.showerror("Erro ao salvar venda", f"Ocorreu um erro ao salvar a venda: {error.message}")
+                self.connection.rollback()
+
+        def calcular_total_venda():
+            # Calcula o valor total da venda somando os valores de todos os itens na árvore
+            return sum(float(self.tree.item(item, 'values')[3].replace('R$', '').replace(',', '').strip()) for item in self.tree.get_children())
+
+        def obter_pagamento():
             # Obtém os valores das entradas de pagamento
             pagamento = {
                 'dinheiro': dinheiro_entry.get(),
@@ -367,14 +395,19 @@ class MainScreen:
                 'credito': credito_entry.get(),
                 'debito': debito_entry.get()
             }
+            
+            # Concatena os valores das formas de pagamento em uma única string
+            formas_pagamento = ', '.join([f"{k}: {v}" for k, v in pagamento.items() if v])
+            return pagamento, formas_pagamento
 
+        def validar_pagamento(pagamento, total_venda):
             # Verifica quantas formas de pagamento foram preenchidas
             formas_pagamento_usadas = [key for key, value in pagamento.items() if value]
-
+            
             # Se mais de uma forma de pagamento for usada, mostra uma mensagem de erro e retorna
             if len(formas_pagamento_usadas) != 1:
                 messagebox.showerror("Erro de Pagamento", "Apenas uma forma de pagamento deve ser usada.")
-                return
+                return False
 
             # Converte os valores de pagamento para float e calcula o total do pagamento
             total_pagamento = 0
@@ -384,65 +417,67 @@ class MainScreen:
                         total_pagamento += float(pagamento[key].replace(',', '.'))
                     except ValueError:
                         messagebox.showerror("Erro de Formatação", f"O valor fornecido para {key} não é um número válido.")
-                        return
+                        return False
 
             # Verifica se o total do pagamento é igual ao valor total da venda
             if total_pagamento != total_venda:
                 messagebox.showerror("Erro de Pagamento", "O valor pago deve ser exatamente igual ao valor total da venda.")
-                return
+                return False
 
-            # Concatena os valores das formas de pagamento em uma única string
-            formas_pagamento = ', '.join([f"{k}: {v}" for k, v in pagamento.items() if v])
+            return True
 
-            try:
-                # Obtém a data e o horário atual
-                now = datetime.now()
-                data_venda = now.date()
-                horario_venda = now.strftime("%H:%M:%S")
+        def obter_data_horario_venda():
+            # Obtém a data e o horário atual
+            now = datetime.now()
+            return now.date(), now.strftime("%H:%M:%S")
 
-                # Insere a venda na tabela TBL_VENDAS
-                sql_venda = """
-                INSERT INTO TBL_VENDAS (DATA, horario, VALOR_TOTAL, FORMA_PAGAMENTO)
-                VALUES (:1, :2, :3, :4)
+        def inserir_venda(data_venda, horario_venda, total_venda, formas_pagamento):
+            # Insere a venda na tabela TBL_VENDAS
+            sql_venda = """
+            INSERT INTO TBL_VENDAS (DATA, horario, VALOR_TOTAL, FORMA_PAGAMENTO)
+            VALUES (:1, :2, :3, :4)
+            """
+            self.cursor.execute(sql_venda, (data_venda, horario_venda, total_venda, formas_pagamento))
+            self.connection.commit()
+            
+            # Obtém o ID da venda recém-inserida
+            self.cursor.execute("SELECT ID FROM TBL_VENDAS WHERE ROWID = :1", [self.cursor.lastrowid])
+            return self.cursor.fetchone()[0]
+
+        def inserir_itens_venda_e_atualizar_estoque(venda_id):
+            # Insere cada item da venda na tabela TBL_ITENS_VENDA e atualiza a quantidade na TBL_PRODUTOS
+            for item in self.tree.get_children():
+                codigo_de_barras = self.tree.item(item, 'values')[0]
+                nome = self.tree.item(item, 'values')[1]
+                quantidade = int(self.tree.item(item, 'values')[2])
+                total_item = float(self.tree.item(item, 'values')[3].replace('R$', '').replace(',', '').strip())
+
+                # Insere o item da venda na tabela TBL_ITENS_VENDA
+                sql_item = """
+                INSERT INTO TBL_ITENS_VENDA (VENDA_ID, CODIGO_PRODUTO, NOME_PRODUTO, QUANTIDADE, TOTAL_ITEM)
+                VALUES (:1, :2, :3, :4, :5)
                 """
-                self.cursor.execute(sql_venda, (data_venda, horario_venda, total_venda, formas_pagamento))
-                self.connection.commit()
+                self.cursor.execute(sql_item, (venda_id, codigo_de_barras, nome, quantidade, total_item))
 
-                # Obtém o ID da venda recém-inserida
-                self.cursor.execute("SELECT ID FROM TBL_VENDAS WHERE ROWID = :1", [self.cursor.lastrowid])
-                venda_id = self.cursor.fetchone()[0]
+                # Atualiza a quantidade do produto na TBL_PRODUTOS
+                sql_update_produto = """
+                UPDATE TBL_PRODUTOS
+                SET UNIDADES = UNIDADES - :1
+                WHERE CODIGO_DE_BARRAS = :2
+                """
+                self.cursor.execute(sql_update_produto, (quantidade, codigo_de_barras))
 
-                # Insere cada item da venda na tabela TBL_ITENS_VENDA
-                for item in self.tree.get_children():
-                    codigo = self.tree.item(item, 'values')[0]
-                    nome = self.tree.item(item, 'values')[1]
-                    quantidade = int(self.tree.item(item, 'values')[2])
-                    total_item = float(self.tree.item(item, 'values')[3].replace('R$', '').replace(',', '').strip())
-
-                    sql_item = """
-                    INSERT INTO TBL_ITENS_VENDA (VENDA_ID, CODIGO_PRODUTO, NOME_PRODUTO, QUANTIDADE, TOTAL_ITEM)
-                    VALUES (:1, :2, :3, :4, :5)
-                    """
-                    self.cursor.execute(sql_item, (venda_id, codigo, nome, quantidade, total_item))
-
-                self.connection.commit()
-
-                # Exibe uma mensagem de sucesso e limpa a tela
-                messagebox.showinfo("Venda Concluída", "Venda realizada com sucesso!")
-                self.entry_busca.delete(0, ctk.END)
-                self.nome_entry.delete(0, ctk.END)
-                self.unitario_entry.delete(0, ctk.END)
-                self.quantidade_entry.delete(0, ctk.END)
-                self.total_entry.delete(0, ctk.END)
-                self.tree.delete(*self.tree.get_children())
-                self.label_total.configure(text="Valor Total : R$ 0.00")
-                self.limpar_campos()
-                janela_pagamento.destroy()
-            except oracledb.DatabaseError as e:
-                error, = e.args
-                # Exibe uma mensagem de erro e faz rollback no banco de dados
-                messagebox.showerror("Erro ao salvar venda", f"Ocorreu um erro ao salvar a venda: {error.message}")
-                self.connection.rollback()
+        def concluir_processamento():
+            # Exibe uma mensagem de sucesso e limpa a tela
+            messagebox.showinfo("Venda Concluída", "Venda realizada com sucesso!")
+            self.entry_busca.delete(0, ctk.END)
+            self.nome_entry.delete(0, ctk.END)
+            self.unitario_entry.delete(0, ctk.END)
+            self.quantidade_entry.delete(0, ctk.END)
+            self.total_entry.delete(0, ctk.END)
+            self.tree.delete(*self.tree.get_children())
+            self.label_total.configure(text="Valor Total : R$ 0.00")
+            self.limpar_campos()
 
         # Cria uma janela para selecionar a forma de pagamento
         janela_pagamento = ctk.CTkToplevel(self.root)
