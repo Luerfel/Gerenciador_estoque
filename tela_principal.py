@@ -349,8 +349,8 @@ class MainScreen:
                 # Calcula o valor total da venda
                 total_venda = calcular_total_venda()
                 
-                # Obtém e valida as formas de pagamento
-                pagamento, formas_pagamento = obter_pagamento()
+                # Obtém e valida a forma de pagamento
+                pagamento, forma_pagamento = obter_pagamento()
                 if not validar_pagamento(pagamento, total_venda):
                     return
                 
@@ -358,7 +358,7 @@ class MainScreen:
                 data_venda, horario_venda = obter_data_horario_venda()
                 
                 # Insere a venda na tabela TBL_VENDAS e obtém o ID da venda
-                venda_id = inserir_venda(data_venda, horario_venda, total_venda, formas_pagamento)
+                venda_id = inserir_venda(data_venda, horario_venda, total_venda, forma_pagamento)
                 
                 # Insere os itens da venda na tabela TBL_ITENS_VENDA e atualiza o estoque
                 inserir_itens_venda_e_atualizar_estoque(venda_id)
@@ -372,6 +372,8 @@ class MainScreen:
                 # Fecha a janela de pagamento
                 janela_pagamento.destroy()
 
+            except ValueError as ve:
+                messagebox.showerror("Erro de Pagamento", str(ve))
             except oracledb.DatabaseError as e:
                 error, = e.args
                 messagebox.showerror("Erro ao salvar venda", f"Ocorreu um erro ao salvar a venda: {error.message}")
@@ -390,9 +392,15 @@ class MainScreen:
                 'debito': debito_entry.get()
             }
             
-            # Concatena os valores das formas de pagamento em uma única string
-            formas_pagamento = ', '.join([f"{k}: {v}" for k, v in pagamento.items() if v])
-            return pagamento, formas_pagamento
+            # Identifica a forma de pagamento utilizada
+            formas_pagamento = [k for k, v in pagamento.items() if v]
+            
+            # Se mais de uma forma de pagamento for usada, retorna erro
+            if len(formas_pagamento) != 1:
+                raise ValueError("Apenas uma forma de pagamento deve ser usada.")
+            
+            return pagamento, formas_pagamento[0]
+
 
         def validar_pagamento(pagamento, total_venda):
             # Verifica quantas formas de pagamento foram preenchidas
@@ -505,38 +513,23 @@ class MainScreen:
         # Função para fechar o caixa e exibir as vendas do dia
 
         # Cria uma nova janela para exibir as vendas do dia
-        janela_caixa = self.criar_janela_caixa()
-        frame_vendas = self.criar_frame_vendas(janela_caixa)
-        data_entry = self.criar_seletor_data(frame_vendas)
-        tree_vendas = self.criar_tabela_vendas(frame_vendas)
-        label_totais = self.criar_label_totais(janela_caixa)
-
-        # Botão para carregar as vendas da data selecionada
-        self.criar_botao_carregar(janela_caixa, tree_vendas, data_entry, label_totais)
-
-        # Carregar vendas do dia atual ao abrir a janela
-        data_atual = datetime.now().date()
-        self.carregar_vendas(tree_vendas, data_entry, label_totais, data_atual)
-
-    def criar_janela_caixa(self):
         janela_caixa = ctk.CTkToplevel(self.root)
         janela_caixa.title("Fechar Caixa")
-        janela_caixa.focus_force()
-        return janela_caixa
 
-    def criar_frame_vendas(self, janela_caixa):
+        # Traz a nova janela para frente e dá o foco
+        janela_caixa.focus_force()
+
+        # Frame para a seleção de data e a tabela de vendas
         frame_vendas = ctk.CTkFrame(janela_caixa)
         frame_vendas.pack(fill="both", expand=True, padx=10, pady=10)
-        return frame_vendas
 
-    def criar_seletor_data(self, frame_vendas):
+        # Seletor de data
         label_data = ctk.CTkLabel(frame_vendas, text="Selecione a Data:")
         label_data.pack(pady=5)
         data_entry = DateEntry(frame_vendas, date_pattern="yyyy-mm-dd")
         data_entry.pack(pady=5)
-        return data_entry
 
-    def criar_tabela_vendas(self, frame_vendas):
+        # Tabela para exibir as vendas
         tree_vendas = ttk.Treeview(frame_vendas, columns=("ID", "Data", "Horário", "Valor Total", "Forma de Pagamento"), show="headings")
         tree_vendas.heading("ID", text="ID")
         tree_vendas.heading("Data", text="Data")
@@ -544,67 +537,66 @@ class MainScreen:
         tree_vendas.heading("Valor Total", text="Valor Total")
         tree_vendas.heading("Forma de Pagamento", text="Forma de Pagamento")
         tree_vendas.pack(fill="both", expand=True)
-        return tree_vendas
 
-    def criar_label_totais(self, janela_caixa):
-        label_totais = ctk.CTkLabel(janela_caixa, text="")
-        label_totais.pack(pady=10)
-        return label_totais
+        # Função para carregar as vendas da data selecionada na tabela
+        def carregar_vendas(data_selecionada=None):
+            # Limpa a tabela de vendas
+            for item in tree_vendas.get_children():
+                tree_vendas.delete(item)
 
-    def criar_botao_carregar(self, janela_caixa, tree_vendas, data_entry, label_totais):
-        botao_carregar = ctk.CTkButton(janela_caixa, text="Carregar Vendas da Data", command=lambda: self.carregar_vendas(tree_vendas, data_entry, label_totais))
-        botao_carregar.pack(pady=10)
+            # Se a data não for fornecida, usa a data selecionada no DateEntry
+            if not data_selecionada:
+                data_selecionada = data_entry.get_date()
 
-    def carregar_vendas(self, tree_vendas, data_entry, label_totais, data_selecionada=None):
-        # Limpa a tabela de vendas
-        for item in tree_vendas.get_children():
-            tree_vendas.delete(item)
-
-        # Se a data não for fornecida, usa a data selecionada no DateEntry
-        if not data_selecionada:
-            data_selecionada = data_entry.get_date()
-
-        # Seleciona as vendas realizadas na data selecionada
-        sql_vendas_dia = "SELECT ID, DATA, horario, VALOR_TOTAL, FORMA_PAGAMENTO FROM TBL_VENDAS WHERE DATA = :1"
-        try:
+            # Seleciona as vendas realizadas na data selecionada
+            sql_vendas_dia = "SELECT ID, DATA, horario, VALOR_TOTAL, FORMA_PAGAMENTO FROM TBL_VENDAS WHERE DATA = :1"
             self.cursor.execute(sql_vendas_dia, (data_selecionada,))
             vendas = self.cursor.fetchall()
-        except Exception as e:
-            print(f"Erro ao carregar vendas: {e}")
-            return
 
-        # Variáveis para calcular os totais por forma de pagamento
-        totais = {
-            'dinheiro': 0,
-            'pix': 0,
-            'credito': 0,
-            'debito': 0,
-            'geral': 0
-        }
+            # Variáveis para calcular os totais por forma de pagamento
+            total_dinheiro = 0
+            total_pix = 0
+            total_credito = 0
+            total_debito = 0
+            total_geral = 0
 
-        # Preenche a tabela com as vendas da data selecionada e calcula os totais
-        for venda in vendas:
-            tree_vendas.insert("", "end", values=venda)
-            valor_total = venda[3]
-            forma_pagamento = venda[4].lower()
+            # Preenche a tabela com as vendas da data selecionada e calcula os totais
+            for venda in vendas:
+                id_venda, data, horario, valor_total, forma_pagamento = venda
 
-            totais['geral'] += valor_total
-            if "dinheiro" in forma_pagamento:
-                totais['dinheiro'] += valor_total
-            elif "pix" in forma_pagamento:
-                totais['pix'] += valor_total
-            elif "credito" in forma_pagamento:
-                totais['credito'] += valor_total
-            elif "debito" in forma_pagamento:
-                totais['debito'] += valor_total
+                # Formata a data para exibir apenas a data, sem hora
+                data_formatada = data.strftime("%Y-%m-%d")
+                tree_vendas.insert("", "end", values=(id_venda, data_formatada, horario, valor_total, forma_pagamento))
 
-        # Exibe os totais na tela
-        label_totais.configure(text=f"Total em Dinheiro: R$ {totais['dinheiro']:.2f}\n"
-                                    f"Total em PIX: R$ {totais['pix']:.2f}\n"
-                                    f"Total em Crédito: R$ {totais['credito']:.2f}\n"
-                                    f"Total em Débito: R$ {totais['debito']:.2f}\n"
-                                    f"Total Geral: R$ {totais['geral']:.2f}")
+                total_geral += valor_total
 
+                if "dinheiro" in forma_pagamento:
+                    total_dinheiro += valor_total
+                elif "pix" in forma_pagamento:
+                    total_pix += valor_total
+                elif "credito" in forma_pagamento:
+                    total_credito += valor_total
+                elif "debito" in forma_pagamento:
+                    total_debito += valor_total
+
+            # Exibe os totais na tela
+            label_totais.configure(text=f"Total em Dinheiro: R$ {total_dinheiro:.2f}\n"
+                                        f"Total em PIX: R$ {total_pix:.2f}\n"
+                                        f"Total em Crédito: R$ {total_credito:.2f}\n"
+                                        f"Total em Débito: R$ {total_debito:.2f}\n"
+                                        f"Total Geral: R$ {total_geral:.2f}")
+
+        # Label para exibir os totais
+        label_totais = ctk.CTkLabel(janela_caixa, text="")
+        label_totais.pack(pady=10)
+
+        # Botão para carregar as vendas da data selecionada
+        botao_carregar = ctk.CTkButton(janela_caixa, text="Carregar Vendas da Data", command=carregar_vendas)
+        botao_carregar.pack(pady=10)
+
+        # Carregar vendas do dia atual ao abrir a janela
+        data_atual = datetime.now().date()
+        carregar_vendas(data_atual)
 
 
     def confirm_exit(self):
