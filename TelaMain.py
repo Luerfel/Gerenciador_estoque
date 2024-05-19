@@ -70,6 +70,7 @@ class MainScreen:
         self.root.bind("<F2>", self.consultar_produto)
         self.root.bind("<F3>", self.editar_produto)
         self.root.bind("<F4>", self.excluir_produto)
+        self.root.bind("<F5>", self.cadastrar_fornecedor)
         self.root.bind("<F6>", self.cancelar_item)
         self.root.bind("<F7>", self.limpar_tela)
 
@@ -95,7 +96,7 @@ class MainScreen:
             ("F2\nConsultar Produto", 0, 1, self.consultar_produto),
             ("F3\nEditar Produto", 0, 2, self.editar_produto),
             ("F4\nExcluir Produto", 0, 3, self.excluir_produto),
-            ("F5\nCadastrar Fornecedor", 0, 4, None),  # Função não implementada
+            ("F5\nCadastrar Fornecedor", 0, 4, self.cadastrar_fornecedor),  
             ("F6\nCancelar Item", 0, 5, self.cancelar_item),
             ("F7\nCancelar Venda", 0, 6, self.limpar_tela),
             ("F8\nConcluir Venda", 0, 7, None)  # Função não implementada
@@ -130,6 +131,12 @@ class MainScreen:
         Abre o arquivo de exclusão de produto.
         """
         subprocess.Popen(["python", "excluir_produto.py"])
+    def cadastrar_fornecedor(self, event=None):
+        """
+        Abre o arquivo de exclusão de produto.
+        """
+        subprocess.Popen(["python", "cadastrar_fornecedor.py"])
+
 
     def buscar_produto(self):
         """
