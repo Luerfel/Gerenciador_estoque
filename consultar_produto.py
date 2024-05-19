@@ -21,28 +21,28 @@ class ConsultarProduto():
 
     # Método para carregar os produtos do banco de dados na árvore de visualização
     def carregar_produtos(self):
-        sql = "SELECT codigo_de_barras, nome, descricao, preco_de_compra, preco_de_venda, fornecedor FROM tbl_produtos"
+        sql = "SELECT codigo_de_barras, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades FROM tbl_produtos"
         self.cursor.execute(sql)  # Executa o comando SQL
         produtos = self.cursor.fetchall()  # Busca todos os resultados da consulta
         for produto in produtos:  # Itera sobre os produtos retornados
-            codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor = produto  # Desempacota os valores do produto
-            self.tree.insert("", "end", values=(codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor))  # Insere os produtos na árvore
+            codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades = produto  # Desempacota os valores do produto
+            self.tree.insert("", "end", values=(codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades))  # Insere os produtos na árvore
 
     # Método para buscar um produto específico no banco de dados
     def buscar_produto(self):
         termo_busca = self.entry_busca.get()  # Obtém o termo de busca inserido pelo usuário
         tipo_busca = self.combo_tipo_busca.get()  # Obtém o tipo de busca selecionado pelo usuário
         if tipo_busca == "Código de Barras":  # Verifica se a busca é por código de barras
-            sql = "SELECT codigo_de_barras, nome, descricao, preco_de_compra, preco_de_venda, fornecedor FROM tbl_produtos WHERE codigo_de_barras = :TERMOS_BUSCA"
+            sql = "SELECT codigo_de_barras, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades FROM tbl_produtos WHERE codigo_de_barras = :TERMOS_BUSCA"
         else:  # Caso contrário, a busca será por nome
-            sql = "SELECT codigo_de_barras, nome, descricao, preco_de_compra, preco_de_venda, fornecedor FROM tbl_produtos WHERE nome LIKE :TERMOS_BUSCA"
+            sql = "SELECT codigo_de_barras, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades FROM tbl_produtos WHERE nome LIKE :TERMOS_BUSCA"
         self.cursor.execute(sql, {"TERMOS_BUSCA": termo_busca})  # Executa o comando SQL com o termo de busca
         resultados = self.cursor.fetchall()  
-        if resultados:  #
-            self.tree.delete(*self.tree.get_children())  # 
+        if resultados:  
+            self.tree.delete(*self.tree.get_children())  
             for produto in resultados:  
-                codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor = produto  
-                self.tree.insert("", "end", values=(codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor))  
+                codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades = produto  
+                self.tree.insert("", "end", values=(codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades))  
         else:
             messagebox.showerror("Erro", "Nenhum resultado encontrado.")  
 
@@ -55,7 +55,7 @@ class ConsultarProduto():
         label_titulo.pack()  # Adiciona o rótulo ao frame
 
         frame_busca = ctk.CTkFrame(frame)  # Cria um frame para a área de busca
-        frame_busca.pack(fill=tk.X)  #
+        frame_busca.pack(fill=tk.X)  
 
         label_busca = ctk.CTkLabel(frame_busca, text="Buscar Produto:")  # Cria um rótulo para o campo de busca
         label_busca.pack(side=tk.LEFT)  # Adiciona o rótulo ao frame de busca
@@ -70,13 +70,14 @@ class ConsultarProduto():
         button_buscar = ctk.CTkButton(frame_busca, text="Buscar", command=self.buscar_produto)  # Cria um botão para iniciar a busca
         button_buscar.pack(side=ctk.LEFT)  
 
-        self.tree = ttk.Treeview(frame, columns=("Código de Barras", "Nome", "Descrição", "Preço Compra", "Preço Venda", "Fornecedor"), show="headings")  # Cria uma árvore de visualização para os produtos
+        self.tree = ttk.Treeview(frame, columns=("Código de Barras", "Nome", "Descrição", "Preço Compra", "Preço Venda", "Fornecedor", "Unidades"), show="headings")  # Cria uma árvore de visualização para os produtos
         self.tree.heading("Código de Barras", text="Código de Barras")  
-        self.tree.heading("Nome", text="Nome") 
+        self.tree.heading("Nome", text="Nome")  
         self.tree.heading("Descrição", text="Descrição")  
         self.tree.heading("Preço Compra", text="Preço Compra")  
         self.tree.heading("Preço Venda", text="Preço Venda")  
         self.tree.heading("Fornecedor", text="Fornecedor")  
+        self.tree.heading("Unidades", text="Unidades")  # Adiciona a coluna "Unidades"
         self.tree.pack(fill=ctk.BOTH, expand=True)  # Adiciona a árvore ao frame principal
 
 # Executa a aplicação

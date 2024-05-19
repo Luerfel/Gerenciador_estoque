@@ -4,6 +4,7 @@ from tkinter import ttk
 import customtkinter as ctk
 import oracledb
 import subprocess
+from datetime import datetime
 
 class MainScreen:
     """
@@ -73,6 +74,7 @@ class MainScreen:
         self.root.bind("<F5>", self.cadastrar_fornecedor)
         self.root.bind("<F6>", self.cancelar_item)
         self.root.bind("<F7>", self.limpar_tela)
+        self.root.bind("<F8>", self.concluir_venda)  
 
     def cancelar_item(self, event=None):
         """
@@ -99,7 +101,7 @@ class MainScreen:
             ("F5\nCadastrar Fornecedor", 0, 4, self.cadastrar_fornecedor),  
             ("F6\nCancelar Item", 0, 5, self.cancelar_item),
             ("F7\nCancelar Venda", 0, 6, self.limpar_tela),
-            ("F8\nConcluir Venda", 0, 7, None)  # Função não implementada
+            ("F8\nConcluir Venda", 0, 7, self.concluir_venda)  
         ]
         for text, row, column, command in button_data:
             button = ctk.CTkButton(self.buttons_container, text=text, width=80, height=40, corner_radius=13)
@@ -131,12 +133,12 @@ class MainScreen:
         Abre o arquivo de exclusão de produto.
         """
         subprocess.Popen(["python", "excluir_produto.py"])
+    
     def cadastrar_fornecedor(self, event=None):
         """
         Abre o arquivo de exclusão de produto.
         """
         subprocess.Popen(["python", "cadastrar_fornecedor.py"])
-
 
     def buscar_produto(self):
         """
@@ -347,6 +349,50 @@ class MainScreen:
         for child in self.tree.get_children():
             total += float(self.tree.item(child, 'values')[3].replace("R$", "").replace(",", ""))
         self.label_total.configure(text=f"Valor Total : R$ {total:.2f}")
+
+    def concluir_venda(self, event=None):
+        """
+        Conclui a venda, salvando os dados no banco de dados e limpando a tela.
+        """
+        if not self.tree.get_children():
+            messagebox.showwarning("Aviso", "Nenhum item adicionado para concluir a venda.")
+            return
+
+        if not messagebox.askyesno("Confirmar Conclusão", "Você tem certeza que deseja concluir a venda?"):
+            return
+
+        data_venda = datetime.now().date()
+        horario_venda = datetime.now().strftime("%H:%M:%S")
+        valor_total_venda = sum(float(self.tree.item(child, 'values')[3].replace("R$", "").replace(",", "")) for child in self.tree.get_children())
+
+        try:
+            sql_venda = "INSERT INTO tbl_vendas (data, horario, valor_total) VALUES (:data, :horario, :valor_total)"
+            self.cursor.execute(sql_venda, {"data": data_venda, "horario": horario_venda, "valor_total": valor_total_venda})
+
+            for child in self.tree.get_children():
+                codigo, nome, quantidade, valor_total = self.tree.item(child, 'values')
+                quantidade = int(quantidade)
+                
+                sql_update_produto = "UPDATE tbl_produtos SET unidades = unidades - :quantidade WHERE codigo_de_barras = :codigo"
+                self.cursor.execute(sql_update_produto, {"quantidade": quantidade, "codigo": codigo})
+
+            self.connection.commit()
+            messagebox.showinfo("Sucesso", "Venda concluída com sucesso!")
+
+            # Limpar a tela após a conclusão da venda
+            self.entry_busca.delete(0, ctk.END)
+            self.nome_entry.delete(0, ctk.END)
+            self.unitario_entry.delete(0, ctk.END)
+            self.quantidade_entry.delete(0, ctk.END)
+            self.total_entry.delete(0, ctk.END)
+            self.tree.delete(*self.tree.get_children())
+            self.label_total.configure(text="Valor Total : R$ 0.00")
+            self.limpar_campos()
+        except oracledb.DatabaseError as e:
+            error, = e.args
+            print(f"Erro ao concluir venda: {error.message}")
+            messagebox.showerror("Erro de Banco de Dados", "Ocorreu um erro ao concluir a venda. Tente novamente.")
+
 
     def confirm_exit(self):
         """
