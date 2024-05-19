@@ -30,9 +30,12 @@ class CadastrarFornecedor:
         tipo_busca = self.combo_tipo_busca.get()
         if tipo_busca == "ID":
             sql = "SELECT ID, NOME, SETOR, TELEFONE, SITE FROM TBL_FORNECEDORES WHERE ID = :TERMOS_BUSCA"
+            termos_busca = termo_busca  # ID deve ser tratado como um número
         else:
             sql = "SELECT ID, NOME, SETOR, TELEFONE, SITE FROM TBL_FORNECEDORES WHERE NOME LIKE :TERMOS_BUSCA"
-        self.cursor.execute(sql, {"TERMOS_BUSCA": f'%{termo_busca}%'})
+            termos_busca = f'%{termo_busca}%'
+        
+        self.cursor.execute(sql, {"TERMOS_BUSCA": termos_busca})
         resultados = self.cursor.fetchall()
         if resultados:
             self.tree.delete(*self.tree.get_children())
@@ -52,6 +55,38 @@ class CadastrarFornecedor:
         item = self.tree.item(selected_item)
         fornecedor_id = item['values'][0]
         self.cadastro_design(fornecedor_id)
+
+    def excluir_fornecedor(self):
+        selected_item = self.tree.selection()
+        if not selected_item:
+            messagebox.showerror("Erro", "Por favor, selecione um fornecedor para excluir.")
+            return
+        item = self.tree.item(selected_item)
+        fornecedor_id = item['values'][0]
+        fornecedor_nome = item['values'][1]
+
+        resposta = messagebox.askyesno("Confirmar Exclusão", "Tem certeza de que deseja excluir o fornecedor selecionado?")
+        if resposta:
+            try:
+                # Verifica se o fornecedor_id é um número
+                fornecedor_id = int(fornecedor_id)
+                
+                # Exclui o fornecedor da tabela TBL_FORNECEDORES
+                sql_excluir_fornecedor = "DELETE FROM TBL_FORNECEDORES WHERE ID = :ID"
+                self.cursor.execute(sql_excluir_fornecedor, {"ID": fornecedor_id})
+                
+                # Remove o nome do fornecedor na tabela TBL_PRODUTOS
+                sql_limpar_produtos = "UPDATE TBL_PRODUTOS SET FORNECEDOR = NULL WHERE FORNECEDOR = :NOME"
+                self.cursor.execute(sql_limpar_produtos, {"NOME": fornecedor_nome})
+                
+                self.connection.commit()
+                messagebox.showinfo("Sucesso", "Fornecedor excluído com sucesso.")
+                self.carregar_fornecedores()
+            except ValueError as ve:
+                messagebox.showerror("Erro", f"Erro ao excluir fornecedor: {ve}")
+            except oracledb.DatabaseError as e:
+                self.connection.rollback()
+                messagebox.showerror("Erro", f"Erro ao excluir fornecedor: {e}")
 
     def cadastro_design(self, fornecedor_id=None):
         self.new_window = ctk.CTkToplevel(self.root)
@@ -126,7 +161,6 @@ class CadastrarFornecedor:
             self.entry_site.insert(0, fornecedor[6])
         else:
             messagebox.showerror("Erro", "Fornecedor não encontrado.")
-            self.new_window.destroy()
 
     def salvar_fornecedor(self, fornecedor_id=None):
         nome = self.entry_nome.get()
@@ -137,8 +171,11 @@ class CadastrarFornecedor:
         email = self.entry_email.get()
         site = self.entry_site.get()
 
-        if not fc.validar_nvarchar2(nome, 50, 1):
+        if not fc.validar_nvarchar2(nome, 100, 0):
             messagebox.showerror("Erro", "Nome inválido. Verifique o valor inserido.")
+            return
+        if nome and nome[0].isdigit():
+            messagebox.showerror("Erro", "O nome não pode começar com um número.")
             return
         if not fc.validar_nvarchar2(descricao, 50, 0):
             messagebox.showerror("Erro", "Descrição inválida. Verifique o valor inserido.")
@@ -195,54 +232,87 @@ class CadastrarFornecedor:
             self.cursor.execute(sql, params)
             self.connection.commit()
             messagebox.showinfo("Sucesso", "Fornecedor atualizado com sucesso." if fornecedor_id else "Fornecedor cadastrado com sucesso.")
-            self.new_window.destroy()  # Fecha a janela de cadastro/edição após salvar
-            self.consultar_design()  # Volta para a tela de consulta após o cadastro/edição
+            self.new_window.destroy()
+            self.consultar_design()
         except Exception as e:
             messagebox.showerror("Erro", f"Erro ao salvar fornecedor: {e}")
-
-    def consultar_design(self):
-        for widget in self.root.winfo_children():
-            widget.destroy()  # Remove todos os widgets existentes
-
-        frame = ctk.CTkFrame(self.root)  # Cria um frame principal
-        frame.pack(fill=ctk.BOTH, expand=True)  # Adiciona o frame à janela principal
-
-        label_titulo = ctk.CTkLabel(frame, text="Consulta de Fornecedores")  # Cria um rótulo com o título
-        label_titulo.pack()  # Adiciona o rótulo ao frame
-
-        frame_busca = ctk.CTkFrame(frame)  # Cria um frame para a área de busca
-        frame_busca.pack(fill=tk.X)
-
-        label_busca = ctk.CTkLabel(frame_busca, text="Buscar Fornecedor:")  # Cria um rótulo para o campo de busca
-        label_busca.pack(side=tk.LEFT)  # Adiciona o rótulo ao frame de busca
-
-        self.entry_busca = ctk.CTkEntry(frame_busca)  # Cria um campo de entrada de texto para a busca
-        self.entry_busca.pack(side=ctk.LEFT, padx=5)  # Adiciona o campo de entrada ao frame de busca
-
-        self.combo_tipo_busca = ttk.Combobox(frame_busca, values=["ID", "Nome"], state="readonly")  # Cria um combobox para selecionar o tipo de busca
-        self.combo_tipo_busca.pack(side=ctk.LEFT)  # Adiciona o combobox ao frame de busca
-        self.combo_tipo_busca.current(0)  # Define o valor padrão como "ID"
-
-        button_buscar = ctk.CTkButton(frame_busca, text="Buscar", command=self.buscar_fornecedor)  # Cria um botão para iniciar a busca
-        button_buscar.pack(side=ctk.LEFT, padx=5)  # Adiciona o botão de busca ao frame de busca
-
-        button_cadastrar = ctk.CTkButton(frame_busca, text="Cadastrar Fornecedor", command=self.cadastrar_fornecedor)  # Cria um botão para cadastrar fornecedor
-        button_cadastrar.pack(side=ctk.LEFT, padx=5)  # Adiciona o botão de cadastro ao frame de busca
-
-        button_editar = ctk.CTkButton(frame_busca, text="Editar Fornecedor", command=self.editar_fornecedor)  # Cria um botão para editar fornecedor
-        button_editar.pack(side=ctk.LEFT, padx=5)  # Adiciona o botão de edição ao frame de busca
-
-        self.tree = ttk.Treeview(frame, columns=("ID", "Nome", "Setor", "Telefone", "Site"), show="headings")  # Cria uma árvore de visualização para os fornecedores
+    def validar_campos(self, nome, descricao, setor, endereco, telefone, email, site):
+        # Valida os campos de entrada
+        if not fc.validar_nvarchar2(nome, 100, 0):
+            messagebox.showerror("Erro", "Nome inválido. Verifique o valor inserido.")
+            return False
+        if nome and nome[0].isdigit():
+            messagebox.showerror("Erro", "O nome não pode começar com um número.")
+            return False
+        if not fc.validar_nvarchar2(descricao, 50, 0):
+            messagebox.showerror("Erro", "Descrição inválida. Verifique o valor inserido.")
+            return False
+        if not fc.validar_nvarchar2(setor, 100, 0):
+            messagebox.showerror("Erro", "Setor inválido. Verifique o valor inserido.")
+            return False
+        if not fc.validar_nvarchar2(endereco, 100, 0):
+            messagebox.showerror("Erro", "Endereço inválido. Verifique o valor inserido.")
+            return False
+        if not fc.validar_nvarchar2(site, 100, 0):
+            messagebox.showerror("Erro", "Site inválido. Verifique o valor inserido.")
+            return False
+        if not fc.validar_nvarchar2(email, 100, 0):
+            messagebox.showerror("Erro", "Email inválido. Verifique o valor inserido.")
+            return False
+        if not fc.validar_nvarchar2(telefone, 20, 0):
+            messagebox.showerror("Erro", "Telefone inválido. Verifique o valor inserido.")
+            return False
+        return True
+    
+    def configurar_treeview(self, frame):
+        # Configura a árvore (Treeview) para exibir os fornecedores
+        self.tree = ttk.Treeview(frame, columns=("ID", "Nome", "Setor", "Telefone", "Site"), show="headings")
         self.tree.heading("ID", text="ID")
         self.tree.heading("Nome", text="Nome")
         self.tree.heading("Setor", text="Setor")
         self.tree.heading("Telefone", text="Telefone")
         self.tree.heading("Site", text="Site")
-        self.tree.pack(fill=ctk.BOTH, expand=True)  # Adiciona a árvore ao frame principal
+        self.tree.pack(fill=ctk.BOTH, expand=True)
+        
+    def consultar_design(self):
+        # Configura a janela de consulta de fornecedores
+        for widget in self.root.winfo_children():
+            widget.destroy()
 
-        self.carregar_fornecedores()  # Carrega os fornecedores ao desenhar a interface de consulta
+        frame = ctk.CTkFrame(self.root)
+        frame.pack(fill=ctk.BOTH, expand=True)
 
-# Executa a aplicação
+        label_titulo = ctk.CTkLabel(frame, text="Consulta de Fornecedores")
+        label_titulo.pack()
+
+        frame_busca = ctk.CTkFrame(frame)
+        frame_busca.pack(fill=tk.X)
+
+        label_busca = ctk.CTkLabel(frame_busca, text="Buscar Fornecedor:")
+        label_busca.pack(side=tk.LEFT)
+
+        self.entry_busca = ctk.CTkEntry(frame_busca)
+        self.entry_busca.pack(side=ctk.LEFT, padx=5)
+
+        self.combo_tipo_busca = ttk.Combobox(frame_busca, values=["ID", "Nome"], state="readonly")
+        self.combo_tipo_busca.pack(side=ctk.LEFT)
+        self.combo_tipo_busca.current(0)
+
+        button_buscar = ctk.CTkButton(frame_busca, text="Buscar", command=self.buscar_fornecedor)
+        button_buscar.pack(side=ctk.LEFT, padx=5)
+
+        button_cadastrar = ctk.CTkButton(frame_busca, text="Cadastrar Fornecedor", command=self.cadastrar_fornecedor)
+        button_cadastrar.pack(side=ctk.LEFT, padx=5)
+
+        button_editar = ctk.CTkButton(frame_busca, text="Editar Fornecedor", command=self.editar_fornecedor)
+        button_editar.pack(side=ctk.LEFT, padx=5)
+
+        button_excluir = ctk.CTkButton(frame_busca, text="Excluir Fornecedor", command=self.excluir_fornecedor)
+        button_excluir.pack(side=ctk.LEFT, padx=5)
+
+        self.configurar_treeview(frame)
+        self.carregar_fornecedores()
+
 if __name__ == "__main__":
-    root = ctk.CTk()  # Cria a janela principal
-    CadastrarFornecedor(root)  # Instancia a classe CadastrarFornecedor e inicia a aplicação
+    root = ctk.CTk()
+    CadastrarFornecedor(root)

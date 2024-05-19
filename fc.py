@@ -44,9 +44,9 @@ def validar_nvarchar2(campo, tam, not_null):
         if not campo:
             messagebox.showerror("Erro", "Por favor, preencha o campo 'Nome'.")
             return False
-
+    
     if len(campo) > tam:
-        messagebox.showerror(f"Erro", "O campo {campo} deve ter no máximo {tam} caracteres.")
+        messagebox.showerror("Erro", f"O campo {campo} deve ter no máximo {tam} caracteres.")
         return False
 
     return True
