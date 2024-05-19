@@ -186,7 +186,7 @@ class MainScreen:
 
     def listar_produtos(self):
         """
-        Exibe uma lista de produtos na tela principal com uma aparência aprimorada.
+        Exibe uma lista de produtos na tela principal.
         """
         # configuração da tela
         style = ttk.Style()
@@ -350,48 +350,127 @@ class MainScreen:
             total += float(self.tree.item(child, 'values')[3].replace("R$", "").replace(",", ""))
         self.label_total.configure(text=f"Valor Total : R$ {total:.2f}")
 
+
     def concluir_venda(self, event=None):
-        """
-        Conclui a venda, salvando os dados no banco de dados e limpando a tela.
-        """
         if not self.tree.get_children():
-            messagebox.showwarning("Aviso", "Nenhum item adicionado para concluir a venda.")
+            messagebox.showwarning("Aviso", "Não há itens na venda.")
             return
 
-        if not messagebox.askyesno("Confirmar Conclusão", "Você tem certeza que deseja concluir a venda?"):
-            return
+        def salvar_venda():
+            # Calcula o valor total da venda somando os valores de todos os itens na árvore
+            total_venda = sum(float(self.tree.item(item, 'values')[3].replace('R$', '').replace(',', '').strip()) for item in self.tree.get_children())
 
-        data_venda = datetime.now().date()
-        horario_venda = datetime.now().strftime("%H:%M:%S")
-        valor_total_venda = sum(float(self.tree.item(child, 'values')[3].replace("R$", "").replace(",", "")) for child in self.tree.get_children())
+            # Obtém os valores das entradas de pagamento
+            pagamento = {
+                'dinheiro': dinheiro_entry.get(),
+                'pix': pix_entry.get(),
+                'credito': credito_entry.get(),
+                'debito': debito_entry.get()
+            }
 
-        try:
-            sql_venda = "INSERT INTO tbl_vendas (data, horario, valor_total) VALUES (:data, :horario, :valor_total)"
-            self.cursor.execute(sql_venda, {"data": data_venda, "horario": horario_venda, "valor_total": valor_total_venda})
+            # Verifica quantas formas de pagamento foram preenchidas
+            formas_pagamento_usadas = [key for key, value in pagamento.items() if value]
 
-            for child in self.tree.get_children():
-                codigo, nome, quantidade, valor_total = self.tree.item(child, 'values')
-                quantidade = int(quantidade)
-                
-                sql_update_produto = "UPDATE tbl_produtos SET unidades = unidades - :quantidade WHERE codigo_de_barras = :codigo"
-                self.cursor.execute(sql_update_produto, {"quantidade": quantidade, "codigo": codigo})
+            # Se mais de uma forma de pagamento for usada, mostra uma mensagem de erro e retorna
+            if len(formas_pagamento_usadas) != 1:
+                messagebox.showerror("Erro de Pagamento", "Apenas uma forma de pagamento deve ser usada.")
+                return
 
-            self.connection.commit()
-            messagebox.showinfo("Sucesso", "Venda concluída com sucesso!")
+            # Converte os valores de pagamento para float e calcula o total do pagamento
+            total_pagamento = 0
+            for key in pagamento:
+                if pagamento[key]:
+                    try:
+                        total_pagamento += float(pagamento[key].replace(',', '.'))
+                    except ValueError:
+                        messagebox.showerror("Erro de Formatação", f"O valor fornecido para {key} não é um número válido.")
+                        return
 
-            # Limpar a tela após a conclusão da venda
-            self.entry_busca.delete(0, ctk.END)
-            self.nome_entry.delete(0, ctk.END)
-            self.unitario_entry.delete(0, ctk.END)
-            self.quantidade_entry.delete(0, ctk.END)
-            self.total_entry.delete(0, ctk.END)
-            self.tree.delete(*self.tree.get_children())
-            self.label_total.configure(text="Valor Total : R$ 0.00")
-            self.limpar_campos()
-        except oracledb.DatabaseError as e:
-            error, = e.args
-            print(f"Erro ao concluir venda: {error.message}")
-            messagebox.showerror("Erro de Banco de Dados", "Ocorreu um erro ao concluir a venda. Tente novamente.")
+            # Verifica se o total do pagamento é igual ao valor total da venda
+            if total_pagamento != total_venda:
+                messagebox.showerror("Erro de Pagamento", "O valor pago deve ser exatamente igual ao valor total da venda.")
+                return
+
+            # Concatena os valores das formas de pagamento em uma única string
+            formas_pagamento = ', '.join([f"{k}: {v}" for k, v in pagamento.items() if v])
+
+            try:
+                # Obtém a data e o horário atual
+                now = datetime.now()
+                data_venda = now.date()
+                horario_venda = now.strftime("%H:%M:%S")
+
+                # Insere a venda na tabela TBL_VENDAS
+                sql_venda = """
+                INSERT INTO TBL_VENDAS (DATA, horario, VALOR_TOTAL, FORMA_PAGAMENTO)
+                VALUES (:1, :2, :3, :4)
+                """
+                self.cursor.execute(sql_venda, (data_venda, horario_venda, total_venda, formas_pagamento))
+                self.connection.commit()
+
+                # Obtém o ID da venda recém-inserida
+                self.cursor.execute("SELECT ID FROM TBL_VENDAS WHERE ROWID = :1", [self.cursor.lastrowid])
+                venda_id = self.cursor.fetchone()[0]
+
+                # Insere cada item da venda na tabela TBL_ITENS_VENDA
+                for item in self.tree.get_children():
+                    codigo = self.tree.item(item, 'values')[0]
+                    nome = self.tree.item(item, 'values')[1]
+                    quantidade = int(self.tree.item(item, 'values')[2])
+                    total_item = float(self.tree.item(item, 'values')[3].replace('R$', '').replace(',', '').strip())
+
+                    sql_item = """
+                    INSERT INTO TBL_ITENS_VENDA (VENDA_ID, CODIGO_PRODUTO, NOME_PRODUTO, QUANTIDADE, TOTAL_ITEM)
+                    VALUES (:1, :2, :3, :4, :5)
+                    """
+                    self.cursor.execute(sql_item, (venda_id, codigo, nome, quantidade, total_item))
+
+                self.connection.commit()
+
+                # Exibe uma mensagem de sucesso e limpa a tela
+                messagebox.showinfo("Venda Concluída", "Venda realizada com sucesso!")
+                self.entry_busca.delete(0, ctk.END)
+                self.nome_entry.delete(0, ctk.END)
+                self.unitario_entry.delete(0, ctk.END)
+                self.quantidade_entry.delete(0, ctk.END)
+                self.total_entry.delete(0, ctk.END)
+                self.tree.delete(*self.tree.get_children())
+                self.label_total.configure(text="Valor Total : R$ 0.00")
+                self.limpar_campos()
+                janela_pagamento.destroy()
+            except oracledb.DatabaseError as e:
+                error, = e.args
+                # Exibe uma mensagem de erro e faz rollback no banco de dados
+                messagebox.showerror("Erro ao salvar venda", f"Ocorreu um erro ao salvar a venda: {error.message}")
+                self.connection.rollback()
+
+        # Cria uma janela para selecionar a forma de pagamento
+        janela_pagamento = ctk.CTkToplevel(self.root)
+        janela_pagamento.title("Forma de Pagamento")
+
+        # Campos de entrada para diferentes formas de pagamento
+        ctk.CTkLabel(janela_pagamento, text="Dinheiro").pack(pady=5)
+        dinheiro_entry = ctk.CTkEntry(janela_pagamento)
+        dinheiro_entry.pack(pady=5)
+
+        ctk.CTkLabel(janela_pagamento, text="PIX").pack(pady=5)
+        pix_entry = ctk.CTkEntry(janela_pagamento)
+        pix_entry.pack(pady=5)
+
+        ctk.CTkLabel(janela_pagamento, text="Cartão de Crédito").pack(pady=5)
+        credito_entry = ctk.CTkEntry(janela_pagamento)
+        credito_entry.pack(pady=5)
+
+        ctk.CTkLabel(janela_pagamento, text="Cartão de Débito").pack(pady=5)
+        debito_entry = ctk.CTkEntry(janela_pagamento)
+        debito_entry.pack(pady=5)
+
+        # Botões para salvar a venda ou cancelar
+        salvar_button = ctk.CTkButton(janela_pagamento, text="Salvar Venda", command=salvar_venda)
+        salvar_button.pack(pady=20)
+
+        cancelar_button = ctk.CTkButton(janela_pagamento, text="Cancelar", command=janela_pagamento.destroy)
+        cancelar_button.pack(pady=10)
 
 
     def confirm_exit(self):
