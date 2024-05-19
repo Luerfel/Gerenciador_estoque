@@ -107,7 +107,7 @@ class CadastrarProduto:
         botao_calcular_preco = ctk.CTkButton(frame, text="Calcular Preço de Venda", command=self.acessar_calculadora_preco_venda)
         botao_calcular_preco.grid(row=5, column=2, padx=5, pady=5)
 
-        # Frame para botões de ação
+        # Frame para os botões
         buttons_frame = ctk.CTkFrame(frame, fg_color="#2b2b2b")
         buttons_frame.grid_columnconfigure((0, 1), weight=1)
         buttons_frame.grid(row=6, column=0, columnspan=3, pady=4)

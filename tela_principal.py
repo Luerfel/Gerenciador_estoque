@@ -6,6 +6,8 @@ import oracledb
 import subprocess
 from datetime import datetime
 import fc
+from tkcalendar import DateEntry
+
 class MainScreen:
     """
     Classe para a tela principal do sistema de gerenciamento de estoque.
@@ -65,20 +67,11 @@ class MainScreen:
         self.root.bind("<F3>", self.editar_produto)
         self.root.bind("<F4>", self.excluir_produto)
         self.root.bind("<F5>", self.cadastrar_fornecedor)
-        self.root.bind("<F6>", self.cancelar_item)
-        self.root.bind("<F7>", self.limpar_tela)
-        self.root.bind("<F8>", self.concluir_venda)  
+        self.root.bind("<F6>", self.limpar_tela)
+        self.root.bind("<F7>", self.concluir_venda)  
+        self.root.bind("<F8>", self.consultar_vendas)
 
-    def cancelar_item(self, event=None):
-        """
-        Cancela o item selecionado na Treeview.
-        """
-        if not self.tree.selection():
-            messagebox.showwarning("Aviso", "Nenhum item selecionado para cancelar.")
-            return
-        item_selecionado = self.tree.selection()[0]
-        self.tree.delete(item_selecionado)
-        self.atualizar_valor_total()
+
 
     def buttons_design(self):
         """
@@ -92,9 +85,10 @@ class MainScreen:
             ("F3\nEditar Produto", 0, 2, self.editar_produto),
             ("F4\nExcluir Produto", 0, 3, self.excluir_produto),
             ("F5\nCadastrar Fornecedor", 0, 4, self.cadastrar_fornecedor),  
-            ("F6\nCancelar Item", 0, 5, self.cancelar_item),
-            ("F7\nCancelar Venda", 0, 6, self.limpar_tela),
-            ("F8\nConcluir Venda", 0, 7, self.concluir_venda)  
+            ("F6\nCancelar Venda", 0, 5, self.limpar_tela),
+            ("F7\nConcluir Venda", 0, 6, self.concluir_venda),  
+            ("F8\nConsultar Vendas", 0, 7, self.consultar_vendas)
+
         ]
         for text, row, column, command in button_data:
             button = ctk.CTkButton(self.buttons_container, text=text, width=80, height=40, corner_radius=13)
@@ -506,6 +500,111 @@ class MainScreen:
 
         cancelar_button = ctk.CTkButton(janela_pagamento, text="Cancelar", command=janela_pagamento.destroy)
         cancelar_button.pack(pady=10)
+    
+    def consultar_vendas(self, event=None):
+        # Função para fechar o caixa e exibir as vendas do dia
+
+        # Cria uma nova janela para exibir as vendas do dia
+        janela_caixa = self.criar_janela_caixa()
+        frame_vendas = self.criar_frame_vendas(janela_caixa)
+        data_entry = self.criar_seletor_data(frame_vendas)
+        tree_vendas = self.criar_tabela_vendas(frame_vendas)
+        label_totais = self.criar_label_totais(janela_caixa)
+
+        # Botão para carregar as vendas da data selecionada
+        self.criar_botao_carregar(janela_caixa, tree_vendas, data_entry, label_totais)
+
+        # Carregar vendas do dia atual ao abrir a janela
+        data_atual = datetime.now().date()
+        self.carregar_vendas(tree_vendas, data_entry, label_totais, data_atual)
+
+    def criar_janela_caixa(self):
+        janela_caixa = ctk.CTkToplevel(self.root)
+        janela_caixa.title("Fechar Caixa")
+        janela_caixa.focus_force()
+        return janela_caixa
+
+    def criar_frame_vendas(self, janela_caixa):
+        frame_vendas = ctk.CTkFrame(janela_caixa)
+        frame_vendas.pack(fill="both", expand=True, padx=10, pady=10)
+        return frame_vendas
+
+    def criar_seletor_data(self, frame_vendas):
+        label_data = ctk.CTkLabel(frame_vendas, text="Selecione a Data:")
+        label_data.pack(pady=5)
+        data_entry = DateEntry(frame_vendas, date_pattern="yyyy-mm-dd")
+        data_entry.pack(pady=5)
+        return data_entry
+
+    def criar_tabela_vendas(self, frame_vendas):
+        tree_vendas = ttk.Treeview(frame_vendas, columns=("ID", "Data", "Horário", "Valor Total", "Forma de Pagamento"), show="headings")
+        tree_vendas.heading("ID", text="ID")
+        tree_vendas.heading("Data", text="Data")
+        tree_vendas.heading("Horário", text="Horário")
+        tree_vendas.heading("Valor Total", text="Valor Total")
+        tree_vendas.heading("Forma de Pagamento", text="Forma de Pagamento")
+        tree_vendas.pack(fill="both", expand=True)
+        return tree_vendas
+
+    def criar_label_totais(self, janela_caixa):
+        label_totais = ctk.CTkLabel(janela_caixa, text="")
+        label_totais.pack(pady=10)
+        return label_totais
+
+    def criar_botao_carregar(self, janela_caixa, tree_vendas, data_entry, label_totais):
+        botao_carregar = ctk.CTkButton(janela_caixa, text="Carregar Vendas da Data", command=lambda: self.carregar_vendas(tree_vendas, data_entry, label_totais))
+        botao_carregar.pack(pady=10)
+
+    def carregar_vendas(self, tree_vendas, data_entry, label_totais, data_selecionada=None):
+        # Limpa a tabela de vendas
+        for item in tree_vendas.get_children():
+            tree_vendas.delete(item)
+
+        # Se a data não for fornecida, usa a data selecionada no DateEntry
+        if not data_selecionada:
+            data_selecionada = data_entry.get_date()
+
+        # Seleciona as vendas realizadas na data selecionada
+        sql_vendas_dia = "SELECT ID, DATA, horario, VALOR_TOTAL, FORMA_PAGAMENTO FROM TBL_VENDAS WHERE DATA = :1"
+        try:
+            self.cursor.execute(sql_vendas_dia, (data_selecionada,))
+            vendas = self.cursor.fetchall()
+        except Exception as e:
+            print(f"Erro ao carregar vendas: {e}")
+            return
+
+        # Variáveis para calcular os totais por forma de pagamento
+        totais = {
+            'dinheiro': 0,
+            'pix': 0,
+            'credito': 0,
+            'debito': 0,
+            'geral': 0
+        }
+
+        # Preenche a tabela com as vendas da data selecionada e calcula os totais
+        for venda in vendas:
+            tree_vendas.insert("", "end", values=venda)
+            valor_total = venda[3]
+            forma_pagamento = venda[4].lower()
+
+            totais['geral'] += valor_total
+            if "dinheiro" in forma_pagamento:
+                totais['dinheiro'] += valor_total
+            elif "pix" in forma_pagamento:
+                totais['pix'] += valor_total
+            elif "credito" in forma_pagamento:
+                totais['credito'] += valor_total
+            elif "debito" in forma_pagamento:
+                totais['debito'] += valor_total
+
+        # Exibe os totais na tela
+        label_totais.configure(text=f"Total em Dinheiro: R$ {totais['dinheiro']:.2f}\n"
+                                    f"Total em PIX: R$ {totais['pix']:.2f}\n"
+                                    f"Total em Crédito: R$ {totais['credito']:.2f}\n"
+                                    f"Total em Débito: R$ {totais['debito']:.2f}\n"
+                                    f"Total Geral: R$ {totais['geral']:.2f}")
+
 
 
     def confirm_exit(self):
