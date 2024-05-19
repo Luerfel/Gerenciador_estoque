@@ -1,118 +1,134 @@
-import tkinter as tk  # Biblioteca padrão do Tkinter para a criação de interfaces gráficas
-import customtkinter as ctk  # Biblioteca customizada para estilização do Tkinter
-from tkinter import ttk, messagebox  # Importa componentes adicionais do Tkinter
-import oracledb  # Biblioteca para conectar-se ao banco de dados Oracle
+import tkinter as tk
+import customtkinter as ctk
+from tkinter import ttk, messagebox
+import oracledb
 import fc
 
-# Classe para a janela de consulta de fornecedores
 class CadastrarFornecedor:
     def __init__(self, root_parameter):
-        self.root = root_parameter  # Janela principal da aplicação
-        self.root.title("Fornecedores")  # Define o título da janela
-        self.connection = fc.conectar_banco()  # Conecta ao banco de dados
+        self.root = root_parameter
+        self.root.title("Fornecedores")
+        self.connection = fc.conectar_banco()
         if self.connection:
             self.cursor = self.connection.cursor()
-            self.consultar_design()  # Chama o método para desenhar a interface
+            self.consultar_design()
         else:
             messagebox.showerror("Erro", "Não foi possível conectar ao banco de dados.")
             self.root.destroy()
-        self.root.mainloop()  # Inicia o loop principal da interface gráfica
+        self.root.mainloop()
 
-    # Método para carregar os fornecedores do banco de dados na árvore de visualização
     def carregar_fornecedores(self):
-        self.tree.delete(*self.tree.get_children())  # Limpa os resultados anteriores da árvore
+        self.tree.delete(*self.tree.get_children())
         sql = "SELECT ID, NOME, SETOR, TELEFONE, SITE FROM TBL_FORNECEDORES"
-        self.cursor.execute(sql)  # Executa o comando SQL
-        fornecedores = self.cursor.fetchall()  # Busca todos os resultados da consulta
-        for fornecedor in fornecedores:  # Itera sobre os fornecedores retornados
-            self.tree.insert("", "end", values=fornecedor)  # Insere os fornecedores na árvore
+        self.cursor.execute(sql)
+        fornecedores = self.cursor.fetchall()
+        for fornecedor in fornecedores:
+            self.tree.insert("", "end", values=fornecedor)
 
-    # Método para buscar um fornecedor específico no banco de dados
     def buscar_fornecedor(self):
-        termo_busca = self.entry_busca.get()  # Obtém o termo de busca inserido pelo usuário
-        tipo_busca = self.combo_tipo_busca.get()  # Obtém o tipo de busca selecionado pelo usuário
-        if tipo_busca == "ID":  # Verifica se a busca é por ID
+        termo_busca = self.entry_busca.get()
+        tipo_busca = self.combo_tipo_busca.get()
+        if tipo_busca == "ID":
             sql = "SELECT ID, NOME, SETOR, TELEFONE, SITE FROM TBL_FORNECEDORES WHERE ID = :TERMOS_BUSCA"
-        else:  # Caso contrário, a busca será por nome
+        else:
             sql = "SELECT ID, NOME, SETOR, TELEFONE, SITE FROM TBL_FORNECEDORES WHERE NOME LIKE :TERMOS_BUSCA"
-        self.cursor.execute(sql, {"TERMOS_BUSCA": f'%{termo_busca}%'})  # Executa o comando SQL com o termo de busca
+        self.cursor.execute(sql, {"TERMOS_BUSCA": f'%{termo_busca}%'})
         resultados = self.cursor.fetchall()
         if resultados:
-            self.tree.delete(*self.tree.get_children())  # Limpa os resultados anteriores da árvore
+            self.tree.delete(*self.tree.get_children())
             for fornecedor in resultados:
-                self.tree.insert("", "end", values=fornecedor)  # Insere os fornecedores encontrados na árvore
+                self.tree.insert("", "end", values=fornecedor)
         else:
-            messagebox.showerror("Erro", "Nenhum resultado encontrado.")  # Exibe uma mensagem de erro se nenhum resultado for encontrado
+            messagebox.showerror("Erro", "Nenhum resultado encontrado.")
 
-    # Método para cadastrar um novo fornecedor
     def cadastrar_fornecedor(self):
         self.cadastro_design()
 
-    # Método para desenhar a interface de cadastro de fornecedores
-    def cadastro_design(self):
-        # Desenha a interface de cadastro
-        frame = ctk.CTkFrame(self.root)
-        frame.place(relwidth=1, relheight=1)
-        frame.grid_columnconfigure(0, weight=1)
-        frame.grid_columnconfigure(1, weight=3)
+    def editar_fornecedor(self):
+        selected_item = self.tree.selection()
+        if not selected_item:
+            messagebox.showerror("Erro", "Por favor, selecione um fornecedor para editar.")
+            return
+        item = self.tree.item(selected_item)
+        fornecedor_id = item['values'][0]
+        self.cadastro_design(fornecedor_id)
 
-        # Nome do fornecedor
-        label_nome = ctk.CTkLabel(frame, text="Nome:")
-        label_nome.grid(row=0, column=0, sticky=tk.W, pady=7, padx=15)
-        self.entry_nome = ctk.CTkEntry(frame)
-        self.entry_nome.grid(row=0, column=1, sticky=tk.EW, pady=7, padx=15)
+    def cadastro_design(self, fornecedor_id=None):
+        self.new_window = ctk.CTkToplevel(self.root)
+        self.new_window.title("Cadastrar Fornecedor" if fornecedor_id is None else "Editar Fornecedor")
+        
+        frame_cadastro = ctk.CTkFrame(self.new_window)
+        frame_cadastro.pack(padx=20, pady=20, fill="both", expand=True)
+        frame_cadastro.grid_columnconfigure(0, weight=1)
+        frame_cadastro.grid_columnconfigure(1, weight=3)
 
-        # Descrição do fornecedor
-        label_descricao = ctk.CTkLabel(frame, text="Descrição:")
-        label_descricao.grid(row=1, column=0, sticky=tk.W, pady=5, padx=15)
-        self.entry_descricao = ctk.CTkEntry(frame)
-        self.entry_descricao.grid(row=1, column=1, sticky=tk.EW, pady=5, padx=15)
+        entry_width = 150
 
-        # Setor do fornecedor
-        label_setor = ctk.CTkLabel(frame, text="Setor:")
-        label_setor.grid(row=2, column=0, sticky=tk.W, pady=5, padx=15)
-        self.entry_setor = ctk.CTkEntry(frame)
-        self.entry_setor.grid(row=2, column=1, sticky=tk.EW, pady=5, padx=15)
+        label_nome = ctk.CTkLabel(frame_cadastro, text="Nome:")
+        label_nome.grid(row=0, column=0, sticky=tk.W, pady=2, padx=2)
+        self.entry_nome = ctk.CTkEntry(frame_cadastro, width=entry_width)
+        self.entry_nome.grid(row=0, column=1, sticky=tk.W, pady=2, padx=2)
 
-        # Endereço do fornecedor
-        label_endereco = ctk.CTkLabel(frame, text="Endereço:")
-        label_endereco.grid(row=3, column=0, sticky=tk.W, pady=5, padx=15)
-        self.entry_endereco = ctk.CTkEntry(frame)
-        self.entry_endereco.grid(row=3, column=1, sticky=tk.EW, pady=5, padx=15)
+        label_descricao = ctk.CTkLabel(frame_cadastro, text="Descrição:")
+        label_descricao.grid(row=1, column=0, sticky=tk.W, pady=2, padx=2)
+        self.entry_descricao = ctk.CTkEntry(frame_cadastro, width=entry_width)
+        self.entry_descricao.grid(row=1, column=1, sticky=tk.W, pady=2, padx=2)
 
-        # Telefone do fornecedor
-        label_telefone = ctk.CTkLabel(frame, text="Telefone:")
-        label_telefone.grid(row=4, column=0, sticky=tk.W, pady=5, padx=15)
-        self.entry_telefone = ctk.CTkEntry(frame)
-        self.entry_telefone.grid(row=4, column=1, sticky=tk.EW, pady=5, padx=15)
+        label_setor = ctk.CTkLabel(frame_cadastro, text="Setor:")
+        label_setor.grid(row=2, column=0, sticky=tk.W, pady=2, padx=2)
+        self.entry_setor = ctk.CTkEntry(frame_cadastro, width=entry_width)
+        self.entry_setor.grid(row=2, column=1, sticky=tk.W, pady=2, padx=2)
 
-        # Email do fornecedor
-        label_email = ctk.CTkLabel(frame, text="Email:")
-        label_email.grid(row=5, column=0, sticky=tk.W, pady=5, padx=15)
-        self.entry_email = ctk.CTkEntry(frame)
-        self.entry_email.grid(row=5, column=1, sticky=tk.EW, pady=5, padx=15)
+        label_endereco = ctk.CTkLabel(frame_cadastro, text="Endereço:")
+        label_endereco.grid(row=3, column=0, sticky=tk.W, pady=2, padx=2)
+        self.entry_endereco = ctk.CTkEntry(frame_cadastro, width=entry_width)
+        self.entry_endereco.grid(row=3, column=1, sticky=tk.W, pady=2, padx=2)
 
-        # Site do fornecedor
-        label_site = ctk.CTkLabel(frame, text="Site:")
-        label_site.grid(row=6, column=0, sticky=tk.W, pady=5, padx=15)
-        self.entry_site = ctk.CTkEntry(frame)
-        self.entry_site.grid(row=6, column=1, sticky=tk.EW, pady=5, padx=15)
+        label_telefone = ctk.CTkLabel(frame_cadastro, text="Telefone:")
+        label_telefone.grid(row=4, column=0, sticky=tk.W, pady=2, padx=2)
+        self.entry_telefone = ctk.CTkEntry(frame_cadastro, width=entry_width)
+        self.entry_telefone.grid(row=4, column=1, sticky=tk.W, pady=2, padx=2)
 
-        # Frame para botões de ação
-        buttons_frame = ctk.CTkFrame(frame, fg_color="#2b2b2b")
+        label_email = ctk.CTkLabel(frame_cadastro, text="Email:")
+        label_email.grid(row=5, column=0, sticky=tk.W, pady=2, padx=2)
+        self.entry_email = ctk.CTkEntry(frame_cadastro, width=entry_width)
+        self.entry_email.grid(row=5, column=1, sticky=tk.W, pady=2, padx=2)
+
+        label_site = ctk.CTkLabel(frame_cadastro, text="Site:")
+        label_site.grid(row=6, column=0, sticky=tk.W, pady=2, padx=2)
+        self.entry_site = ctk.CTkEntry(frame_cadastro, width=entry_width)
+        self.entry_site.grid(row=6, column=1, sticky=tk.W, pady=2, padx=2)
+
+        buttons_frame = ctk.CTkFrame(frame_cadastro, fg_color="#2b2b2b")
         buttons_frame.grid_columnconfigure((0, 1), weight=1)
         buttons_frame.grid(row=7, column=0, columnspan=2, pady=4)
 
-        # Botão para cadastrar o fornecedor
-        button_cadastrar = ctk.CTkButton(buttons_frame, text="Cadastrar Fornecedor", command=self.salvar_fornecedor)
-        button_cadastrar.grid(row=0, column=0, padx=5, sticky=tk.W)
+        button_cadastrar = ctk.CTkButton(buttons_frame, text="Salvar Alterações" if fornecedor_id else "Cadastrar Fornecedor", command=lambda: self.salvar_fornecedor(fornecedor_id))
+        button_cadastrar.grid(row=8, column=0, padx=2, sticky=tk.W)
 
-        # Botão para voltar à tela de consulta
-        button_voltar = ctk.CTkButton(buttons_frame, text="Voltar", command=self.consultar_design)
-        button_voltar.grid(row=0, column=1, padx=5, sticky=tk.E)
+        button_voltar = ctk.CTkButton(buttons_frame, text="Fechar", command=self.new_window.destroy)
+        button_voltar.grid(row=8, column=1, padx=2, sticky=tk.E)
 
-    # Método para salvar o fornecedor no banco de dados
-    def salvar_fornecedor(self):
+        if fornecedor_id:
+            self.carregar_dados_fornecedor(fornecedor_id)
+
+    def carregar_dados_fornecedor(self, fornecedor_id):
+        sql = "SELECT NOME, DESCRICAO, SETOR, ENDERECO, TELEFONE, EMAIL, SITE FROM TBL_FORNECEDORES WHERE ID = :ID"
+        self.cursor.execute(sql, {"ID": fornecedor_id})
+        fornecedor = self.cursor.fetchone()
+        if fornecedor:
+            self.entry_nome.insert(0, fornecedor[0])
+            self.entry_descricao.insert(0, fornecedor[1])
+            self.entry_setor.insert(0, fornecedor[2])
+            self.entry_endereco.insert(0, fornecedor[3])
+            self.entry_telefone.insert(0, fornecedor[4])
+            self.entry_email.insert(0, fornecedor[5])
+            self.entry_site.insert(0, fornecedor[6])
+        else:
+            messagebox.showerror("Erro", "Fornecedor não encontrado.")
+            self.new_window.destroy()
+
+    def salvar_fornecedor(self, fornecedor_id=None):
         nome = self.entry_nome.get()
         descricao = self.entry_descricao.get()
         setor = self.entry_setor.get()
@@ -121,7 +137,6 @@ class CadastrarFornecedor:
         email = self.entry_email.get()
         site = self.entry_site.get()
 
-        # Validações dos campos
         if not fc.validar_nvarchar2(nome, 50, 1):
             messagebox.showerror("Erro", "Nome inválido. Verifique o valor inserido.")
             return
@@ -144,12 +159,29 @@ class CadastrarFornecedor:
             messagebox.showerror("Erro", "Telefone inválido. Verifique o valor inserido.")
             return
 
-        sql = """
-            INSERT INTO TBL_FORNECEDORES (NOME, DESCRICAO, SETOR, ENDERECO, TELEFONE, EMAIL, SITE)
-            VALUES (:NOME, :DESCRICAO, :SETOR, :ENDERECO, :TELEFONE, :EMAIL, :SITE)
-        """
-        try:
-            self.cursor.execute(sql, {
+        if fornecedor_id:
+            sql = """
+                UPDATE TBL_FORNECEDORES
+                SET NOME = :NOME, DESCRICAO = :DESCRICAO, SETOR = :SETOR, ENDERECO = :ENDERECO,
+                    TELEFONE = :TELEFONE, EMAIL = :EMAIL, SITE = :SITE
+                WHERE ID = :ID
+            """
+            params = {
+                "NOME": nome,
+                "DESCRICAO": descricao,
+                "SETOR": setor,
+                "ENDERECO": endereco,
+                "TELEFONE": telefone,
+                "EMAIL": email,
+                "SITE": site,
+                "ID": fornecedor_id
+            }
+        else:
+            sql = """
+                INSERT INTO TBL_FORNECEDORES (NOME, DESCRICAO, SETOR, ENDERECO, TELEFONE, EMAIL, SITE)
+                VALUES (:NOME, :DESCRICAO, :SETOR, :ENDERECO, :TELEFONE, :EMAIL, :SITE)
+            """
+            params = {
                 "NOME": nome,
                 "DESCRICAO": descricao,
                 "SETOR": setor,
@@ -157,14 +189,17 @@ class CadastrarFornecedor:
                 "TELEFONE": telefone,
                 "EMAIL": email,
                 "SITE": site
-            })
-            self.connection.commit()
-            messagebox.showinfo("Sucesso", "Fornecedor cadastrado com sucesso.")
-            self.consultar_design()  # Volta para a tela de consulta após o cadastro
-        except Exception as e:
-            messagebox.showerror("Erro", f"Erro ao cadastrar fornecedor: {e}")
+            }
 
-    # Método para desenhar a interface de consulta de fornecedores
+        try:
+            self.cursor.execute(sql, params)
+            self.connection.commit()
+            messagebox.showinfo("Sucesso", "Fornecedor atualizado com sucesso." if fornecedor_id else "Fornecedor cadastrado com sucesso.")
+            self.new_window.destroy()  # Fecha a janela de cadastro/edição após salvar
+            self.consultar_design()  # Volta para a tela de consulta após o cadastro/edição
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao salvar fornecedor: {e}")
+
     def consultar_design(self):
         for widget in self.root.winfo_children():
             widget.destroy()  # Remove todos os widgets existentes
@@ -193,6 +228,9 @@ class CadastrarFornecedor:
 
         button_cadastrar = ctk.CTkButton(frame_busca, text="Cadastrar Fornecedor", command=self.cadastrar_fornecedor)  # Cria um botão para cadastrar fornecedor
         button_cadastrar.pack(side=ctk.LEFT, padx=5)  # Adiciona o botão de cadastro ao frame de busca
+
+        button_editar = ctk.CTkButton(frame_busca, text="Editar Fornecedor", command=self.editar_fornecedor)  # Cria um botão para editar fornecedor
+        button_editar.pack(side=ctk.LEFT, padx=5)  # Adiciona o botão de edição ao frame de busca
 
         self.tree = ttk.Treeview(frame, columns=("ID", "Nome", "Setor", "Telefone", "Site"), show="headings")  # Cria uma árvore de visualização para os fornecedores
         self.tree.heading("ID", text="ID")
