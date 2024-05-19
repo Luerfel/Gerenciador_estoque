@@ -6,8 +6,6 @@ import oracledb
 import customtkinter as ctk
 from calculo_venda import CalculadoraPrecoVenda
 
-
-
 class CadastrarProduto:
     def __init__(self, root):
         # Configurações iniciais da janela principal
@@ -51,6 +49,16 @@ class CadastrarProduto:
             fc.limpar_tela()
         return self.codigo
 
+    def obter_fornecedores(self):
+        # Função para obter a lista de fornecedores do banco de dados
+        try:
+            self.cursor.execute("SELECT nome FROM tbl_fornecedores")
+            fornecedores = [row[0] for row in self.cursor.fetchall()]
+            return fornecedores
+        except oracledb.DatabaseError as e:
+            messagebox.showerror("Erro", f"Erro ao acessar a lista de fornecedores: {e}")
+            return []
+
     def cadastro_design(self):
         # Desenha a interface de cadastro
         frame = ctk.CTkFrame(self.root)
@@ -85,7 +93,8 @@ class CadastrarProduto:
         # Fornecedor do produto
         label_fornecedor = ctk.CTkLabel(frame, text="Fornecedor:")
         label_fornecedor.grid(row=4, column=0, sticky=tk.W, pady=5, padx=15)
-        self.combo_fornecedor = ctk.CTkComboBox(frame, state="readonly", values=["Fornecedor 1", "Fornecedor 2", "Fornecedor 3"])
+        fornecedores = self.obter_fornecedores()
+        self.combo_fornecedor = ctk.CTkComboBox(frame, state="readonly", values=fornecedores)
         self.combo_fornecedor.grid(row=4, column=1, sticky=tk.EW, pady=5, padx=15)
 
         # Preço de venda do produto
