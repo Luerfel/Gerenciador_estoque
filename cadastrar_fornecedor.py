@@ -17,6 +17,7 @@ class CadastrarFornecedor:
             self.root.destroy()
         self.root.mainloop()
 
+# Carrega os fornecedores no Treeview
     def carregar_fornecedores(self):
         self.tree.delete(*self.tree.get_children())
         sql = "SELECT ID, NOME, SETOR, TELEFONE, SITE FROM TBL_FORNECEDORES"
@@ -25,6 +26,7 @@ class CadastrarFornecedor:
         for fornecedor in fornecedores:
             self.tree.insert("", "end", values=fornecedor)
 
+# Realiza a busca de fornecedores com base no termo e tipo de busca
     def buscar_fornecedor(self):
         termo_busca = self.entry_busca.get()
         tipo_busca = self.combo_tipo_busca.get()
@@ -44,9 +46,11 @@ class CadastrarFornecedor:
         else:
             messagebox.showerror("Erro", "Nenhum resultado encontrado.")
 
+# Abre a janela para cadastro de fornecedor
     def cadastrar_fornecedor(self):
         self.cadastro_design()
 
+# Abre a janela para edição de fornecedor selecionado
     def editar_fornecedor(self):
         selected_item = self.tree.selection()
         if not selected_item:
@@ -56,6 +60,7 @@ class CadastrarFornecedor:
         fornecedor_id = item['values'][0]
         self.cadastro_design(fornecedor_id)
 
+# Exclui o fornecedor selecionado
     def excluir_fornecedor(self):
         selected_item = self.tree.selection()
         if not selected_item:
@@ -88,6 +93,7 @@ class CadastrarFornecedor:
                 self.connection.rollback()
                 messagebox.showerror("Erro", f"Erro ao excluir fornecedor: {e}")
 
+# Cria a janela de cadastro/edição de fornecedor
     def cadastro_design(self, fornecedor_id=None):
         self.new_window = ctk.CTkToplevel(self.root)
         self.new_window.title("Cadastrar Fornecedor" if fornecedor_id is None else "Editar Fornecedor")
@@ -147,6 +153,7 @@ class CadastrarFornecedor:
         if fornecedor_id:
             self.carregar_dados_fornecedor(fornecedor_id)
 
+ # Carrega os dados do fornecedor selecionado para edição
     def carregar_dados_fornecedor(self, fornecedor_id):
         sql = "SELECT NOME, DESCRICAO, SETOR, ENDERECO, TELEFONE, EMAIL, SITE FROM TBL_FORNECEDORES WHERE ID = :ID"
         self.cursor.execute(sql, {"ID": fornecedor_id})
@@ -162,6 +169,7 @@ class CadastrarFornecedor:
         else:
             messagebox.showerror("Erro", "Fornecedor não encontrado.")
 
+# Salva as alterações ou cadastro de um fornecedor
     def salvar_fornecedor(self, fornecedor_id=None):
         nome = self.entry_nome.get()
         descricao = self.entry_descricao.get()
@@ -273,7 +281,8 @@ class CadastrarFornecedor:
         self.tree.heading("Telefone", text="Telefone")
         self.tree.heading("Site", text="Site")
         self.tree.pack(fill=ctk.BOTH, expand=True)
-        
+
+# Interface principal para consulta de fornecedores       
     def consultar_design(self):
         # Configura a janela de consulta de fornecedores
         for widget in self.root.winfo_children():
