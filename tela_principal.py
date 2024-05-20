@@ -508,11 +508,11 @@ class MainScreen:
 
         cancelar_button = ctk.CTkButton(janela_pagamento, text="Cancelar", command=janela_pagamento.destroy)
         cancelar_button.pack(pady=10)
-    
+        
     def consultar_vendas(self, event=None):
-        # Função para fechar o caixa e exibir as vendas do dia
+        # Função para fechar o caixa e exibir as vendas do dia, mês e ano
 
-        # Cria uma nova janela para exibir as vendas do dia
+        # Cria uma nova janela para exibir as vendas
         janela_caixa = ctk.CTkToplevel(self.root)
         janela_caixa.title("Fechar Caixa")
 
@@ -531,42 +531,54 @@ class MainScreen:
 
         # Tabela para exibir as vendas
         tree_vendas = ttk.Treeview(frame_vendas, columns=("ID", "Data", "Horário", "Valor Total", "Forma de Pagamento"), show="headings")
-        tree_vendas.heading("ID", text="ID")
-        tree_vendas.heading("Data", text="Data")
-        tree_vendas.heading("Horário", text="Horário")
-        tree_vendas.heading("Valor Total", text="Valor Total")
-        tree_vendas.heading("Forma de Pagamento", text="Forma de Pagamento")
+        tree_vendas.heading("ID", text="ID", anchor="center")
+        tree_vendas.heading("Data", text="Data", anchor="center")
+        tree_vendas.heading("Horário", text="Horário", anchor="center")
+        tree_vendas.heading("Valor Total", text="Valor Total", anchor="center")
+        tree_vendas.heading("Forma de Pagamento", text="Forma de Pagamento", anchor="center")
+        tree_vendas.column("ID", anchor="center")
+        tree_vendas.column("Data", anchor="center")
+        tree_vendas.column("Horário", anchor="center")
+        tree_vendas.column("Valor Total", anchor="center")
+        tree_vendas.column("Forma de Pagamento", anchor="center")
         tree_vendas.pack(fill="both", expand=True)
 
-        # Função para carregar as vendas da data selecionada na tabela
-        def carregar_vendas(data_selecionada=None):
+        # Função para carregar as vendas da data, mês ou ano selecionados na tabela
+        def carregar_vendas(periodo):
             # Limpa a tabela de vendas
             for item in tree_vendas.get_children():
                 tree_vendas.delete(item)
 
-            # Se a data não for fornecida, usa a data selecionada no DateEntry
-            if not data_selecionada:
-                data_selecionada = data_entry.get_date()
-
-            # Seleciona as vendas realizadas na data selecionada
-            sql_vendas_dia = "SELECT ID, DATA, horario, VALOR_TOTAL, FORMA_PAGAMENTO FROM TBL_VENDAS WHERE DATA = :1"
-            self.cursor.execute(sql_vendas_dia, (data_selecionada,))
-            vendas = self.cursor.fetchall()
-
-            # Variáveis para calcular os totais por forma de pagamento
+            vendas = []
             total_dinheiro = 0
             total_pix = 0
             total_credito = 0
             total_debito = 0
             total_geral = 0
 
-            # Preenche a tabela com as vendas da data selecionada e calcula os totais
+            # Se a data não for fornecida, usa a data selecionada no DateEntry
+            data_selecionada = data_entry.get_date()
+
+            # Determina a consulta SQL com base no período
+            if periodo == "dia":
+                sql_vendas = "SELECT ID, DATA, horario, VALOR_TOTAL, FORMA_PAGAMENTO FROM TBL_VENDAS WHERE DATA = :1"
+                self.cursor.execute(sql_vendas, (data_selecionada,))
+            elif periodo == "mes":
+                sql_vendas = "SELECT ID, DATA, horario, VALOR_TOTAL, FORMA_PAGAMENTO FROM TBL_VENDAS WHERE EXTRACT(YEAR FROM DATA) = :1 AND EXTRACT(MONTH FROM DATA) = :2"
+                self.cursor.execute(sql_vendas, (data_selecionada.year, data_selecionada.month))
+            elif periodo == "ano":
+                sql_vendas = "SELECT ID, DATA, horario, VALOR_TOTAL, FORMA_PAGAMENTO FROM TBL_VENDAS WHERE EXTRACT(YEAR FROM DATA) = :1"
+                self.cursor.execute(sql_vendas, (data_selecionada.year,))
+
+            vendas = self.cursor.fetchall()
+
+            # Preenche a tabela com as vendas e calcula os totais
             for venda in vendas:
                 id_venda, data, horario, valor_total, forma_pagamento = venda
 
                 # Formata a data para exibir apenas a data, sem hora
                 data_formatada = data.strftime("%Y-%m-%d")
-                tree_vendas.insert("", "end", values=(id_venda, data_formatada, horario, valor_total, forma_pagamento))
+                tree_vendas.insert("", "end", values=(id_venda, data_formatada, horario, f"R$ {valor_total:.2f}".replace('.', ','), forma_pagamento))
 
                 total_geral += valor_total
 
@@ -580,23 +592,27 @@ class MainScreen:
                     total_debito += valor_total
 
             # Exibe os totais na tela
-            label_totais.configure(text=f"Total em Dinheiro: R$ {total_dinheiro:.2f}\n"
-                                        f"Total em PIX: R$ {total_pix:.2f}\n"
-                                        f"Total em Crédito: R$ {total_credito:.2f}\n"
-                                        f"Total em Débito: R$ {total_debito:.2f}\n"
-                                        f"Total Geral: R$ {total_geral:.2f}")
+            label_totais.configure(text=f"Total em Dinheiro: R$ {total_dinheiro:.2f}".replace('.', ',') + "\n"
+                                        f"Total em PIX: R$ {total_pix:.2f}".replace('.', ',') + "\n"
+                                        f"Total em Crédito: R$ {total_credito:.2f}".replace('.', ',') + "\n"
+                                        f"Total em Débito: R$ {total_debito:.2f}".replace('.', ',') + "\n"
+                                        f"Total Geral: R$ {total_geral:.2f}".replace('.', ','))
 
         # Label para exibir os totais
         label_totais = ctk.CTkLabel(janela_caixa, text="")
         label_totais.pack(pady=10)
 
-        # Botão para carregar as vendas da data selecionada
-        botao_carregar = ctk.CTkButton(janela_caixa, text="Carregar Vendas da Data", command=carregar_vendas)
-        botao_carregar.pack(pady=10)
+        # Botões para carregar as vendas do dia, mês e ano selecionados
+        botao_carregar_dia = ctk.CTkButton(janela_caixa, text="Carregar Vendas do Dia", command=lambda: carregar_vendas("dia"))
+        botao_carregar_dia.pack(pady=5)
+        botao_carregar_mes = ctk.CTkButton(janela_caixa, text="Carregar Vendas do Mês", command=lambda: carregar_vendas("mes"))
+        botao_carregar_mes.pack(pady=5)
+        botao_carregar_ano = ctk.CTkButton(janela_caixa, text="Carregar Vendas do Ano", command=lambda: carregar_vendas("ano"))
+        botao_carregar_ano.pack(pady=5)
 
         # Carregar vendas do dia atual ao abrir a janela
         data_atual = datetime.now().date()
-        carregar_vendas(data_atual)
+        carregar_vendas("dia")
 
 
     def confirm_exit(self):

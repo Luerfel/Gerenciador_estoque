@@ -71,13 +71,20 @@ class ConsultarProduto():
         button_buscar.pack(side=ctk.LEFT)  
 
         self.tree = ttk.Treeview(frame, columns=("Código de Barras", "Nome", "Descrição", "Preço Compra", "Preço Venda", "Fornecedor", "Unidades"), show="headings")  # Cria uma árvore de visualização para os produtos
-        self.tree.heading("Código de Barras", text="Código de Barras")  
-        self.tree.heading("Nome", text="Nome")  
-        self.tree.heading("Descrição", text="Descrição")  
-        self.tree.heading("Preço Compra", text="Preço Compra")  
-        self.tree.heading("Preço Venda", text="Preço Venda")  
-        self.tree.heading("Fornecedor", text="Fornecedor")  
-        self.tree.heading("Unidades", text="Unidades")  # Adiciona a coluna "Unidades"
+        self.tree.heading("Código de Barras", text="Código de Barras", anchor="center")  
+        self.tree.heading("Nome", text="Nome", anchor="center")  
+        self.tree.heading("Descrição", text="Descrição", anchor="center")  
+        self.tree.heading("Preço Compra", text="Preço Compra", anchor="center")  
+        self.tree.heading("Preço Venda", text="Preço Venda", anchor="center")  
+        self.tree.heading("Fornecedor", text="Fornecedor", anchor="center")  
+        self.tree.heading("Unidades", text="Unidades", anchor="center")  # Adiciona a coluna "Unidades"
+        self.tree.column("Código de Barras", anchor="center")
+        self.tree.column("Nome", anchor="center")
+        self.tree.column("Descrição", anchor="center")
+        self.tree.column("Preço Compra", anchor="center")
+        self.tree.column("Preço Venda", anchor="center")
+        self.tree.column("Fornecedor", anchor="center")
+        self.tree.column("Unidades", anchor="center")
         self.tree.pack(fill=ctk.BOTH, expand=True)  # Adiciona a árvore ao frame principal
 
 # Executa a aplicação

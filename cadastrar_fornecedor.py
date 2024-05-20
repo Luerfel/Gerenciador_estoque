@@ -275,12 +275,18 @@ class CadastrarFornecedor:
     def configurar_treeview(self, frame):
         # Configura a árvore (Treeview) para exibir os fornecedores
         self.tree = ttk.Treeview(frame, columns=("ID", "Nome", "Setor", "Telefone", "Site"), show="headings")
-        self.tree.heading("ID", text="ID")
-        self.tree.heading("Nome", text="Nome")
-        self.tree.heading("Setor", text="Setor")
-        self.tree.heading("Telefone", text="Telefone")
-        self.tree.heading("Site", text="Site")
+        self.tree.heading("ID", text="ID", anchor="center")
+        self.tree.heading("Nome", text="Nome", anchor="center")
+        self.tree.heading("Setor", text="Setor", anchor="center")
+        self.tree.heading("Telefone", text="Telefone", anchor="center")
+        self.tree.heading("Site", text="Site", anchor="center")
+        self.tree.column("ID", anchor="center")
+        self.tree.column("Nome", anchor="center")
+        self.tree.column("Setor", anchor="center")
+        self.tree.column("Telefone", anchor="center")
+        self.tree.column("Site", anchor="center")
         self.tree.pack(fill=ctk.BOTH, expand=True)
+
 
 # Interface principal para consulta de fornecedores       
     def consultar_design(self):
