@@ -2,6 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox
 import fc
+import oracledb
 from calculo_venda import CalculadoraPrecoVenda
 
 class EditarProduto():
@@ -17,6 +18,12 @@ class EditarProduto():
         self.cursor = self.connection.cursor()
         self.inicializar_interface()
         self.carregar_produtos()
+        # Variáveis para armazenar os percentuais
+        self.percentual_custo_fixo = None
+        self.percentual_custo_operacional = None
+        self.percentual_imposto = None
+        self.percentual_comissao_venda = None
+        self.percentual_margem_lucro = None
         self.root.mainloop()
 
     def inicializar_interface(self):
@@ -56,7 +63,7 @@ class EditarProduto():
     def acessar_calculadora_preco_venda(self):
         # Método para acessar a calculadora de preço de venda e ocultar a janela principal
         self.root.withdraw()
-        calculadora = CalculadoraPrecoVenda(self.root, self.entry_preco_venda_principal)
+        calculadora = CalculadoraPrecoVenda(self.root, self.entry_preco_venda_principal, self)
 
     def carregar_produtos(self):
         # Método para carregar produtos do banco de dados e exibí-los na treeview
@@ -100,35 +107,53 @@ class EditarProduto():
                 self.entry_preco_venda_principal.insert(0, preco_de_venda)
             else:
                 messagebox.showerror("Erro", "Produto não encontrado.")
-
+    def obter_fornecedores(self):
+        # Função para obter a lista de fornecedores do banco de dados
+        try:
+            self.cursor.execute("SELECT nome FROM tbl_fornecedores")
+            fornecedores = [row[0] for row in self.cursor.fetchall()]
+            return fornecedores
+        except oracledb.DatabaseError as e:
+            messagebox.showerror("Erro", f"Erro ao acessar a lista de fornecedores: {e}")
+            return []
     def atualizar_produto(self):
         # Método para atualizar os dados do produto no banco de dados
         if self.codigo:
             # Obtém os valores dos campos de entrada
-            nome = self.entry_nome.get()
-            descricao = self.entry_descricao.get()
-            preco_de_compra = self.entry_custo_aquisicao.get()
-            unidades = self.entry_unidades.get()
-            fornecedor = self.combo_fornecedor.get()
-            preco_de_venda = self.entry_preco_venda_principal.get()
+            self.nome = self.entry_nome.get()
+            self.descricao = self.entry_descricao.get()
+            self.preco_de_compra = self.entry_custo_aquisicao.get()
+            self.unidades = self.entry_unidades.get()
+            self.fornecedor = self.combo_fornecedor.get()
+            self.preco_de_venda = self.entry_preco_venda_principal.get()
 
+            percentual_custo_fixo = self.percentual_custo_fixo
+            percentual_custo_operacional = self.percentual_custo_operacional
+            percentual_imposto = self.percentual_imposto
+            percentual_comissao_venda = self.percentual_comissao_venda
+            percentual_margem_lucro = self.percentual_margem_lucro
             # Validações dos campos
-            if not fc.validar_nvarchar2(nome, 50, 1):
+            if not fc.validar_nvarchar2(self.nome, 50, 1):
                 return
-            if not fc.validar_nvarchar2(descricao, 50, 0):
+            if not fc.validar_nvarchar2(self.descricao, 50, 0):
                 return
-            if not fc.validar_number("preço de venda", preco_de_venda, 1):
+            if not fc.validar_number("preço de venda", self.preco_de_venda, 1):
                 return
-            if not fc.validar_number("preço de compra", preco_de_compra, 1):
+            if not fc.validar_number("preço de compra", self.preco_de_compra, 1):
                 return
-            if not fc.validar_number("unidades", unidades, 1):
+            if not fc.validar_number("unidades", self.unidades, 1):
                 return
 
             # Converte valores para tipos apropriados
-            preco_de_venda = float(preco_de_venda.replace(',', '.'))
-            preco_de_compra = float(preco_de_compra.replace(',', '.'))
-            unidades = int(unidades.replace(',', '.'))
+            preco_de_venda = self.preco_de_venda.replace(',', '.')
+            preco_de_venda = float(preco_de_venda)
 
+            preco_de_compra = self.preco_de_compra.replace(',', '.')
+            preco_de_compra = float(preco_de_compra)
+
+            unidades = self.unidades.replace(',', '.')
+            unidades = int(unidades)
+        
             try:
                 # Atualiza os dados do produto no banco de dados
                 sql = """
@@ -138,14 +163,32 @@ class EditarProduto():
                 WHERE codigo_de_barras = :CODIGO_DE_BARRAS
                 """
                 self.cursor.execute(sql, {
-                    "NOME": nome,
-                    "DESCRICAO": descricao,
+                    "NOME": self.nome,
+                    "DESCRICAO": self.descricao,
                     "PRECO_DE_COMPRA": preco_de_compra,
                     "UNIDADES": unidades,
-                    "FORNECEDOR": fornecedor,
+                    "FORNECEDOR": self.fornecedor,
                     "PRECO_DE_VENDA": preco_de_venda,
                     "CODIGO_DE_BARRAS": self.codigo
                 })
+
+                # Atualiza os dados do produto na tabela tbl_produto_composicao
+                sql_composicao = """
+                UPDATE tbl_produto_composicao
+                SET percentual_custo_fixo = :PERCENTUAL_CUSTO_FIXO, percentual_custo_operacional = :PERCENTUAL_CUSTO_OPERACIONAL,
+                    percentual_imposto = :PERCENTUAL_IMPOSTO, percentual_comissao_venda = :PERCENTUAL_COMISSAO_VENDA,
+                    percentual_margem_lucro = :PERCENTUAL_MARGEM_LUCRO
+                WHERE codigo_de_barras = :CODIGO_DE_BARRAS
+                """
+                self.cursor.execute(sql_composicao, {
+                    "PERCENTUAL_CUSTO_FIXO": percentual_custo_fixo,
+                    "PERCENTUAL_CUSTO_OPERACIONAL": percentual_custo_operacional,
+                    "PERCENTUAL_IMPOSTO": percentual_imposto,
+                    "PERCENTUAL_COMISSAO_VENDA": percentual_comissao_venda,
+                    "PERCENTUAL_MARGEM_LUCRO": percentual_margem_lucro,
+                    "CODIGO_DE_BARRAS": self.codigo
+                })
+
                 self.connection.commit()
                 messagebox.showinfo("Sucesso", "Produto atualizado com sucesso.")
 
@@ -194,7 +237,8 @@ class EditarProduto():
         # Fornecedor do produto
         label_fornecedor = ctk.CTkLabel(self.frame_editar, text="Fornecedor:")
         label_fornecedor.grid(row=4, column=0, sticky=tk.W, pady=5, padx=15)
-        self.combo_fornecedor = ctk.CTkComboBox(self.frame_editar, values=["Fornecedor A", "Fornecedor B", "Fornecedor C"])
+        fornecedores = self.obter_fornecedores()
+        self.combo_fornecedor = ctk.CTkComboBox(self.frame_editar, values=fornecedores)
         self.combo_fornecedor.grid(row=4, column=1, sticky=tk.EW, pady=5, padx=15)
 
         # Preço de venda do produto
@@ -211,6 +255,7 @@ class EditarProduto():
 
         # Carregar os dados do produto selecionado
         self.carregar_produto_selecionado()
+
 
     def buscar_produto(self):
         # Método para buscar um produto no banco de dados pelo código de barras

@@ -21,14 +21,18 @@ class CadastrarProduto:
             return
         # Chama a função para desenhar a interface de cadastro
         self.cadastro_design()
-        
+        self.percentual_custo_fixo = None
+        self.percentual_custo_operacional = None
+        self.percentual_imposto = None
+        self.percentual_comissao_venda = None
+        self.percentual_margem_lucro = None
         # Inicia o loop principal da interface gráfica
         self.root.mainloop()
 
     def acessar_calculadora_preco_venda(self):
         # Função para acessar a calculadora de preço de venda
         self.root.withdraw()  # Oculta a janela principal
-        calculadora = CalculadoraPrecoVenda(self.root, self.entry_preco_venda_principal)
+        calculadora = CalculadoraPrecoVenda(self.root, self.entry_preco_venda_principal,self)
 
     def voltar_tela_principal(self):
         # Função para voltar à tela principal
@@ -46,7 +50,7 @@ class CadastrarProduto:
             if resultado > 0:
                 return self.gerar_codigo_barra()  # Gera novamente se o código já existir
         except:
-            fc.limpar_tela()
+            pass
         return self.codigo
 
     def obter_fornecedores(self):
@@ -126,6 +130,11 @@ class CadastrarProduto:
         self.unidades = self.entry_unidades.get()  # Obtém o número de unidades
         self.fornecedor = self.combo_fornecedor.get()  # Obtém o fornecedor
 
+        percentual_custo_fixo = self.percentual_custo_fixo
+        percentual_custo_operacional = self.percentual_custo_operacional
+        percentual_imposto = self.percentual_imposto
+        percentual_comissao_venda = self.percentual_comissao_venda
+        percentual_margem_lucro = self.percentual_margem_lucro
         # Validações dos campos
         if not fc.validar_nvarchar2(self.nome, 50, 1):
             return
@@ -161,6 +170,18 @@ class CadastrarProduto:
                 'preco_de_venda': preco_de_venda,
                 'unidades': unidades,
                 'fornecedor': self.fornecedor
+            })
+            # Inserção na tabela tbl_produto_composicao
+            self.cursor.execute("""
+            INSERT INTO tbl_produto_composicao (codigo_de_barras, percentual_custo_fixo, percentual_custo_operacional, percentual_imposto, percentual_comissao_venda, percentual_margem_lucro)
+            VALUES (:codigo_de_barras, :percentual_custo_fixo, :percentual_custo_operacional, :percentual_imposto, :percentual_comissao_venda, :percentual_margem_lucro)
+            """, {
+                'codigo_de_barras': self.codigo_de_barras,
+                'percentual_custo_fixo': percentual_custo_fixo,
+                'percentual_custo_operacional': percentual_custo_operacional,
+                'percentual_imposto': percentual_imposto,
+                'percentual_comissao_venda': percentual_comissao_venda,
+                'percentual_margem_lucro': percentual_margem_lucro
             })
 
             self.connection.commit()  # Confirma a transação

@@ -112,7 +112,15 @@ def criar_tabela():
         )
         """)
         print("Tabela TBL_FORNECEDORES criada com sucesso!!")
-
+#CREATE TABLE tbl_produto_composicao (
+ #   codigo_de_barras NVARCHAR2(13) PRIMARY KEY,
+  #  percentual_custo_fixo NUMBER(5, 2),
+   # percentual_custo_operacional NUMBER(5, 2),
+   # percentual_imposto NUMBER(5, 2),
+   # percentual_comissao_venda NUMBER(5, 2),
+   # percentual_margem_lucro NUMBER(5, 2),
+   # FOREIGN KEY (codigo_de_barras) REFERENCES tbl_produtos(codigo_de_barras)
+#);
         # Salva as alterações no banco de dados
         connection.commit()
 

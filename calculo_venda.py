@@ -3,13 +3,17 @@ from tkinter import messagebox
 import customtkinter as ctk
 import fc
 
+
 class CalculadoraPrecoVenda:
-    def __init__(self, root, entry_preco_venda_principal):
+    def __init__(self, root, entry_preco_venda_principal, cadastro_produto):
+
         self.root = root
         self.root.title("Calculadora de Preço de Venda")
         self.entry_preco_venda_principal = entry_preco_venda_principal
         self.connection = fc.conectar_banco()
         self.cursor = self.connection.cursor()
+        self.cadastro_produto = cadastro_produto  
+
         self.tela_calculo_venda()
 
     def calcular_preco_venda(self):
@@ -204,11 +208,20 @@ class CalculadoraPrecoVenda:
         self.root.deiconify()
 
     def salvar(self):
+        # Salva o preço de venda
         preco_venda = self.entry_preco_venda.get()
         self.entry_preco_venda_principal.configure(state="normal")
         self.entry_preco_venda_principal.delete(0, tk.END)
         self.entry_preco_venda_principal.insert(0, preco_venda)
         self.entry_preco_venda_principal.configure(state="readonly")
+        
+        # Atualiza os percentuais na instância de CadastrarProduto ou editar_produto
+        self.cadastro_produto.percentual_custo_fixo = float(self.entry_percentual_custo_fixo.get())
+        self.cadastro_produto.percentual_custo_operacional = float(self.entry_percentual_custo_operacional.get())
+        self.cadastro_produto.percentual_imposto = float(self.entry_custo_imposto.get())
+        self.cadastro_produto.percentual_comissao_venda = float(self.entry_comissao_venda.get())
+        self.cadastro_produto.percentual_margem_lucro = float(self.margem_lucro_var.get())
+        
         self.nova_janela.destroy()
         self.root.deiconify()
 
