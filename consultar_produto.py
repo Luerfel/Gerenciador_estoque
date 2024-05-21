@@ -5,11 +5,12 @@ import oracledb  # Biblioteca para conectar-se ao banco de dados Oracle
 import fc
 from cp import HillCipher
 import numpy as np
+
 key_matrix = [
-    [6, 24, 1],
-    [13, 16, 10],
-    [20, 17, 15]
+    [3, 3],
+    [2, 5]
 ]
+
 cipher = HillCipher(key_matrix)
 
 # Classe para a janela de consulta de produtos
@@ -39,7 +40,7 @@ class ConsultarProduto():
             # Descriptografa o nome e a descrição
             nome = cipher.decrypt(nome)
             descricao = cipher.decrypt(descricao)
-            fornecedor = cipher.decrypt(descricao)
+            fornecedor = cipher.decrypt(fornecedor)
             self.tree.insert("", "end", values=(codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades))  # Insere os produtos na árvore
 
     # Método para buscar um produto específico no banco de dados
@@ -50,6 +51,7 @@ class ConsultarProduto():
             sql = "SELECT codigo_de_barras, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades FROM tbl_produtos WHERE codigo_de_barras = :TERMOS_BUSCA"
             self.cursor.execute(sql, {"TERMOS_BUSCA": termo_busca})  # Executa o comando SQL com o termo de busca
         else:  # Caso contrário, a busca será por nome
+            termo_busca = cipher.encrypt(termo_busca)
             sql = "SELECT codigo_de_barras, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades FROM tbl_produtos WHERE nome LIKE :TERMOS_BUSCA"
             self.cursor.execute(sql, {"TERMOS_BUSCA": f"%{termo_busca}%"})  # Executa o comando SQL com o termo de busca
 
@@ -62,6 +64,7 @@ class ConsultarProduto():
                 # Descriptografa o nome e a descrição
                 nome = cipher.decrypt(nome)
                 descricao = cipher.decrypt(descricao)
+                fornecedor = cipher.decrypt(fornecedor)
 
                 self.tree.insert("", "end", values=(codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades))  
         else:

@@ -111,3 +111,7 @@ def calcular_custos_e_percentuais(entry_rendimento_mensal, entry_custo_fixo, ent
     calcular_e_exibir_percentual(entry_custo_mercadoria, entry_custo_operacional, entry_percentual_custo_operacional,
                                  "custo total das mercadorias")
 
+key_matrix = [
+    [3, 3],
+    [2, 5]
+] 

@@ -94,17 +94,18 @@ class HillCipher:
         return plaintext
 
 # Exemplo de uso
-key_matrix = [
-    [6, 24, 1],
-    [13, 16, 10],
-    [20, 17, 15]
+key_matrix_2x2 = [
+    [3, 3],
+    [2, 5]
 ]
 
-"""
-cipher = HillCipher(key_matrix)
-plaintext = "A"
+cipher = HillCipher(key_matrix_2x2)
+
+# Testando criptografia e descriptografia
+plaintext = "HELLO world"
 ciphertext = cipher.encrypt(plaintext)
-print("Encrypted:", ciphertext)
+print(f"Ciphertext: {ciphertext}")
+
 decrypted_text = cipher.decrypt(ciphertext)
-print("Decrypted:", decrypted_text)
-"""
+print(f"Decrypted text: {decrypted_text}")
+

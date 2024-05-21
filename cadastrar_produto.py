@@ -8,12 +8,11 @@ from calculo_venda import CalculadoraPrecoVenda
 from cp import HillCipher
 
 key_matrix = [
-    [6, 24, 1],
-    [13, 16, 10],
-    [20, 17, 15]
+    [3, 3],
+    [2, 5]
 ]
-cipher = HillCipher(key_matrix)
 
+cipher = HillCipher(key_matrix)
 class CadastrarProduto:
     def __init__(self, root):
         # Configurações iniciais da janela principal
