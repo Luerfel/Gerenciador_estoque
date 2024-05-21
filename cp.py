@@ -92,7 +92,7 @@ class HillCipher:
         # Reinsere os espaços nas posições originais
         plaintext = self.reinsert_spaces(plaintext, spaces)
         return plaintext
-
+"""
 # Exemplo de uso
 key_matrix_2x2 = [
     [3, 3],
@@ -108,4 +108,4 @@ print(f"Ciphertext: {ciphertext}")
 
 decrypted_text = cipher.decrypt(ciphertext)
 print(f"Decrypted text: {decrypted_text}")
-
+"""

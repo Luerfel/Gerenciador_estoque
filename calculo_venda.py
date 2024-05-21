@@ -12,10 +12,9 @@ class CalculadoraPrecoVenda:
         self.entry_preco_venda_principal = entry_preco_venda_principal
         self.connection = fc.conectar_banco()
         self.cursor = self.connection.cursor()
-        self.cadastro_produto = cadastro_produto  
-
+        self.cadastro_produto = cadastro_produto
         self.tela_calculo_venda()
-
+        self.preencher_campos_composicao()
     def calcular_preco_venda(self):
         # Limpar mensagem de erro antes de calcular
         self.label_composicao_preco.configure(text="")
@@ -50,6 +49,41 @@ class CalculadoraPrecoVenda:
             self.atualizar_preco_venda("Erro")
             self.label_composicao_preco.configure(text=f"Erro ao calcular a composição do preço: {str(e)}")
 
+    def preencher_campos_composicao(self):
+        if (self.codigo_de_barra != 0):
+            query = """
+                SELECT percentual_custo_fixo, percentual_custo_operacional, percentual_imposto, 
+                    percentual_comissao_venda, percentual_margem_lucro 
+                FROM tbl_produto_composicao 
+                WHERE codigo_de_barras = :codigo_de_barras
+            """
+            self.cursor.execute(query, {"codigo_de_barras": self.codigo_de_barras})
+            result = self.cursor.fetchone()
+
+            if result:
+                self.entry_percentual_custo_fixo.configure(state="normal")
+                self.entry_percentual_custo_operacional.configure(state="normal")
+                self.entry_custo_imposto.configure(state="normal")
+                self.entry_comissao_venda.configure(state="normal")
+                self.entry_margem_lucro.configure(state="normal")
+
+                self.entry_percentual_custo_fixo.delete(0, tk.END)
+                self.entry_percentual_custo_operacional.delete(0, tk.END)
+                self.entry_custo_imposto.delete(0, tk.END)
+                self.entry_comissao_venda.delete(0, tk.END)
+                self.entry_margem_lucro.delete(0, tk.END)
+
+                self.entry_percentual_custo_fixo.insert(0, str(result[0]))
+                self.entry_percentual_custo_operacional.insert(0, str(result[1]))
+                self.entry_custo_imposto.insert(0, str(result[2]))
+                self.entry_comissao_venda.insert(0, str(result[3]))
+                self.entry_margem_lucro.insert(0, str(result[4]))
+
+                self.entry_percentual_custo_fixo.configure(state="readonly")
+                self.entry_percentual_custo_operacional.configure(state="readonly")
+                self.entry_custo_imposto.configure(state="readonly")
+                self.entry_comissao_venda.configure(state="readonly")
+                self.entry_margem_lucro.configure(state="readonly")
 
     def atualizar_preco_venda(self, preco):
         self.entry_preco_venda.configure(state="normal")

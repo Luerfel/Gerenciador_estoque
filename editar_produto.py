@@ -17,11 +17,7 @@ class EditarProduto():
             self.root.destroy()  # Fecha a aplicação se a conexão falhar
             return
         self.cursor = self.connection.cursor()
-        self.hill_cipher = HillCipher([
-            [6, 24, 1],
-            [13, 16, 10],
-            [20, 17, 15]
-            ])
+        self.hill_cipher = HillCipher(fc.key_matriz())
         self.inicializar_interface()
         self.carregar_produtos()
 
