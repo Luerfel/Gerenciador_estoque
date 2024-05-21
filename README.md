@@ -1,9 +1,10 @@
-instalação das bibliotecas necessarias :
+# instalação das bibliotecas necessarias :
 
 pip install oracledb
 
+´´´
 pip install customtkinter
-
+´´´
 pip install tkcalendar
 
 
