@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import oracledb
 import fc
+
 class ExcluirProduto():
     def __init__(self, root_parameter):
         # Inicializa a janela principal da aplicação
@@ -50,6 +51,9 @@ class ExcluirProduto():
 
     def excluir_produto(self, codigo):
         # Remove o produto do banco de dados
+        sql = "DELETE FROM tbl_produto_composicao WHERE codigo_de_barras = :CODIGO_DE_BARRAS"
+        self.cursor.execute(sql, {"CODIGO_DE_BARRAS": codigo})
+        self.connection.commit()
         sql = "DELETE FROM tbl_produtos WHERE codigo_de_barras = :CODIGO_DE_BARRAS"
         self.cursor.execute(sql, {"CODIGO_DE_BARRAS": codigo})
         self.connection.commit()

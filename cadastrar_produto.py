@@ -5,6 +5,14 @@ import random
 import oracledb
 import customtkinter as ctk
 from calculo_venda import CalculadoraPrecoVenda
+from cp import HillCipher
+
+key_matrix = [
+    [6, 24, 1],
+    [13, 16, 10],
+    [20, 17, 15]
+]
+cipher = HillCipher(key_matrix)
 
 class CadastrarProduto:
     def __init__(self, root):
@@ -124,11 +132,16 @@ class CadastrarProduto:
         # Função para cadastrar o produto no banco de dados
         self.nome = self.entry_nome.get()  # Obtém o nome do produto
         self.descricao = self.entry_descricao.get()  # Obtém a descrição do produto
+
+        self.nome = cipher.encrypt(self.nome)
+        self.descricao = cipher.encrypt(self.descricao)
+        
         self.codigo_de_barras = self.gerar_codigo_barra()  # Gera um código de barras único
         self.preco_de_compra = self.entry_custo_aquisicao.get()  # Obtém o custo de aquisição
         self.preco_de_venda = self.entry_preco_venda_principal.get()  # Obtém o preço de venda
         self.unidades = self.entry_unidades.get()  # Obtém o número de unidades
         self.fornecedor = self.combo_fornecedor.get()  # Obtém o fornecedor
+        self.fornecedor = cipher.encrypt(self.fornecedor)
 
         percentual_custo_fixo = self.percentual_custo_fixo
         percentual_custo_operacional = self.percentual_custo_operacional
@@ -203,3 +216,4 @@ class CadastrarProduto:
 if __name__ == "__main__":
     root = ctk.CTk()  # Cria a janela principal
     CadastrarProduto(root)  # Inicia o cadastro de produto
+

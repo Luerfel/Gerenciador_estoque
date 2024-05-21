@@ -65,6 +65,9 @@ class HillCipher:
         
         # Converte a matriz cifrada de volta para texto
         ciphertext = ''.join(chr(num + ord('A')) for num in encrypted_matrix.flatten())
+        
+        # Reinsere os espaços nas posições originais
+        ciphertext = self.reinsert_spaces(ciphertext, spaces)
         return ciphertext
 
     def decrypt(self, ciphertext):
@@ -98,7 +101,7 @@ key_matrix = [
 ]
 
 cipher = HillCipher(key_matrix)
-plaintext = "hello               world"
+plaintext = "A"
 ciphertext = cipher.encrypt(plaintext)
 print("Encrypted:", ciphertext)
 decrypted_text = cipher.decrypt(ciphertext)

@@ -4,6 +4,7 @@ from tkinter import ttk, messagebox
 import fc
 import oracledb
 from calculo_venda import CalculadoraPrecoVenda
+from cp import HillCipher
 
 class EditarProduto():
     def __init__(self, root_parameter):
@@ -16,8 +17,14 @@ class EditarProduto():
             self.root.destroy()  # Fecha a aplicação se a conexão falhar
             return
         self.cursor = self.connection.cursor()
+        self.hill_cipher = HillCipher([
+            [6, 24, 1],
+            [13, 16, 10],
+            [20, 17, 15]
+            ])
         self.inicializar_interface()
         self.carregar_produtos()
+
         # Variáveis para armazenar os percentuais
         self.percentual_custo_fixo = None
         self.percentual_custo_operacional = None
@@ -72,7 +79,8 @@ class EditarProduto():
         self.cursor.execute(sql)
         produtos = self.cursor.fetchall()
         for produto in produtos:
-            codigo, nome = produto
+            codigo, nome = produto  # dar valor
+            nome = self.hill_cipher.decrypt(nome)  # decrypt nome
             self.tree.insert("", "end", values=(codigo, nome))
 
     def carregar_dados_produto(self, event=None):
@@ -94,6 +102,11 @@ class EditarProduto():
             produto = self.cursor.fetchone()
             if produto:
                 codigo, nome, descricao, preco_de_compra, unidades, fornecedor, preco_de_venda = produto
+                # Descriptografa os campos
+                nome = self.hill_cipher.decrypt(nome)
+                descricao = self.hill_cipher.decrypt(descricao)
+                fornecedor = self.hill_cipher.decrypt(fornecedor)
+                
                 self.entry_nome.delete(0, tk.END)
                 self.entry_nome.insert(0, nome)
                 self.entry_descricao.delete(0, tk.END)
@@ -132,6 +145,7 @@ class EditarProduto():
             percentual_imposto = self.percentual_imposto
             percentual_comissao_venda = self.percentual_comissao_venda
             percentual_margem_lucro = self.percentual_margem_lucro
+            
             # Validações dos campos
             if not fc.validar_nvarchar2(self.nome, 50, 1):
                 return
@@ -153,7 +167,12 @@ class EditarProduto():
 
             unidades = self.unidades.replace(',', '.')
             unidades = int(unidades)
-        
+
+            # Criptografa os campos
+            nome = self.hill_cipher.encrypt(self.nome)
+            descricao = self.hill_cipher.encrypt(self.descricao)
+            fornecedor = self.hill_cipher.encrypt(self.fornecedor)
+            
             try:
                 # Atualiza os dados do produto no banco de dados
                 sql = """
@@ -163,11 +182,11 @@ class EditarProduto():
                 WHERE codigo_de_barras = :CODIGO_DE_BARRAS
                 """
                 self.cursor.execute(sql, {
-                    "NOME": self.nome,
-                    "DESCRICAO": self.descricao,
+                    "NOME": nome,
+                    "DESCRICAO": descricao,
                     "PRECO_DE_COMPRA": preco_de_compra,
                     "UNIDADES": unidades,
-                    "FORNECEDOR": self.fornecedor,
+                    "FORNECEDOR": fornecedor,
                     "PRECO_DE_VENDA": preco_de_venda,
                     "CODIGO_DE_BARRAS": self.codigo
                 })
@@ -188,16 +207,16 @@ class EditarProduto():
                     "PERCENTUAL_MARGEM_LUCRO": percentual_margem_lucro,
                     "CODIGO_DE_BARRAS": self.codigo
                 })
-
+                
                 self.connection.commit()
                 messagebox.showinfo("Sucesso", "Produto atualizado com sucesso.")
-
-                # Fecha a janela de edição e volta para a lista de produtos
-                self.frame_editar.destroy()
-                self.carregar_produtos()  # Recarrega a lista de produtos
+                self.carregar_produtos()
+                self.limpar_campos()
+                self.codigo = None
             except Exception as e:
-                self.connection.rollback()
-                messagebox.showerror("Erro", str(e))
+                messagebox.showerror("Erro", f"Erro ao atualizar o produto: {e}")
+        else:
+            messagebox.showerror("Erro", "Nenhum produto selecionado.")
 
     def iniciar_edicao(self):
         # Método para iniciar a edição de um produto selecionado
@@ -266,6 +285,11 @@ class EditarProduto():
         if produto:
             # Preenche os campos de entrada com os dados do produto encontrado
             self.codigo, nome, descricao, preco_de_compra, unidades, fornecedor, preco_de_venda = produto
+            # Descriptografa os campos
+            nome = self.hill_cipher.decrypt(nome)
+            descricao = self.hill_cipher.decrypt(descricao)
+            fornecedor = self.hill_cipher.decrypt(fornecedor)
+            
             self.entry_nome.delete(0, tk.END)
             self.entry_nome.insert(0, nome)
             self.entry_descricao.delete(0, tk.END)
@@ -282,6 +306,7 @@ class EditarProduto():
             self.tree.insert("", "end", values=(self.codigo, nome))
         else:
             messagebox.showerror("Erro", "Produto não encontrado.")
+            
 
 if __name__ == "__main__":
     root = ctk.CTk()

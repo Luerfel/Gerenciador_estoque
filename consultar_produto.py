@@ -3,6 +3,14 @@ import customtkinter as ctk  # Biblioteca customizada para estilização do Tkin
 from tkinter import ttk, messagebox  # Importa componentes adicionais do Tkinter
 import oracledb  # Biblioteca para conectar-se ao banco de dados Oracle
 import fc
+from cp import HillCipher
+import numpy as np
+key_matrix = [
+    [6, 24, 1],
+    [13, 16, 10],
+    [20, 17, 15]
+]
+cipher = HillCipher(key_matrix)
 
 # Classe para a janela de consulta de produtos
 class ConsultarProduto():
@@ -20,12 +28,18 @@ class ConsultarProduto():
         self.root.mainloop()  # Inicia o loop principal da interface gráfica
 
     # Método para carregar os produtos do banco de dados na árvore de visualização
+    # Método para carregar os produtos do banco de dados na árvore de visualização
     def carregar_produtos(self):
         sql = "SELECT codigo_de_barras, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades FROM tbl_produtos"
         self.cursor.execute(sql)  # Executa o comando SQL
         produtos = self.cursor.fetchall()  # Busca todos os resultados da consulta
         for produto in produtos:  # Itera sobre os produtos retornados
             codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades = produto  # Desempacota os valores do produto
+
+            # Descriptografa o nome e a descrição
+            nome = cipher.decrypt(nome)
+            descricao = cipher.decrypt(descricao)
+            fornecedor = cipher.decrypt(descricao)
             self.tree.insert("", "end", values=(codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades))  # Insere os produtos na árvore
 
     # Método para buscar um produto específico no banco de dados
@@ -34,17 +48,25 @@ class ConsultarProduto():
         tipo_busca = self.combo_tipo_busca.get()  # Obtém o tipo de busca selecionado pelo usuário
         if tipo_busca == "Código de Barras":  # Verifica se a busca é por código de barras
             sql = "SELECT codigo_de_barras, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades FROM tbl_produtos WHERE codigo_de_barras = :TERMOS_BUSCA"
+            self.cursor.execute(sql, {"TERMOS_BUSCA": termo_busca})  # Executa o comando SQL com o termo de busca
         else:  # Caso contrário, a busca será por nome
             sql = "SELECT codigo_de_barras, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades FROM tbl_produtos WHERE nome LIKE :TERMOS_BUSCA"
-        self.cursor.execute(sql, {"TERMOS_BUSCA": termo_busca})  # Executa o comando SQL com o termo de busca
+            self.cursor.execute(sql, {"TERMOS_BUSCA": f"%{termo_busca}%"})  # Executa o comando SQL com o termo de busca
+
         resultados = self.cursor.fetchall()  
         if resultados:  
             self.tree.delete(*self.tree.get_children())  
             for produto in resultados:  
                 codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades = produto  
+
+                # Descriptografa o nome e a descrição
+                nome = cipher.decrypt(nome)
+                descricao = cipher.decrypt(descricao)
+
                 self.tree.insert("", "end", values=(codigo, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades))  
         else:
             messagebox.showerror("Erro", "Nenhum resultado encontrado.")  
+
 
     # Método para desenhar a interface de consulta de produtos
     def consultar_design(self):
