@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import oracledb
 import fc
-
+from cp import HillCipher
 class ExcluirProduto():
     def __init__(self, root_parameter):
         # Inicializa a janela principal da aplicação
@@ -11,6 +11,8 @@ class ExcluirProduto():
         self.root.title("Excluir Produto")
         # Inicializa a conexão e o cursor do banco de dados
         self.connection = fc.conectar_banco()
+        self.hill_cipher = HillCipher(fc.key_matriz())
+
         if self.connection:
             self.cursor = self.connection.cursor()
             # Chama o método para configurar o design da interface
@@ -24,13 +26,16 @@ class ExcluirProduto():
         self.root.mainloop()
 
     def carregar_produtos(self):
-        # Consulta o banco de dados para obter os produtos e carrega-os na árvore
+        # Método para carregar produtos do banco de dados e exibí-los na treeview
+        self.tree.delete(*self.tree.get_children())  # Limpa a treeview
         sql = "SELECT codigo_de_barras, nome FROM tbl_produtos"
         self.cursor.execute(sql)
         produtos = self.cursor.fetchall()
         for produto in produtos:
-            self.codigo, nome = produto
-            self.tree.insert("", "end", values=(self.codigo, nome))
+            codigo, nome = produto  # dar valor
+            nome = self.hill_cipher.decrypt(nome)  # decrypt nome
+            self.tree.insert("", "end", values=(codigo, nome))
+
 
     def confirmar_exclusao(self):
         # Confirma se um produto foi selecionado antes de excluir
