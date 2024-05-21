@@ -10,7 +10,7 @@ pip install customtkinter
 pip install tkcalendar
 ```
 
-### ao acessar o programa pela primeira vez, crie as tabelas e o preenchimento dela com 10 produtos  com o arquivo GerarTabela.py
+ao acessar o programa pela primeira vez, crie as tabelas e o preenchimento dela com 10 produtos  com o arquivo GerarTabela.py
 
 ## Os Arquivos que precisam ser executados são esses :
 
