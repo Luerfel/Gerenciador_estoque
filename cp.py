@@ -100,9 +100,11 @@ key_matrix = [
     [20, 17, 15]
 ]
 
+"""
 cipher = HillCipher(key_matrix)
 plaintext = "A"
 ciphertext = cipher.encrypt(plaintext)
 print("Encrypted:", ciphertext)
 decrypted_text = cipher.decrypt(ciphertext)
 print("Decrypted:", decrypted_text)
+"""
