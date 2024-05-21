@@ -5,7 +5,7 @@ import fc
 
 
 class CalculadoraPrecoVenda:
-    def __init__(self, root, entry_preco_venda_principal, cadastro_produto):
+    def __init__(self, root, entry_preco_venda_principal, cadastro_produto, codigo_de_barras):
 
         self.root = root
         self.root.title("Calculadora de Preço de Venda")
@@ -13,6 +13,7 @@ class CalculadoraPrecoVenda:
         self.connection = fc.conectar_banco()
         self.cursor = self.connection.cursor()
         self.cadastro_produto = cadastro_produto
+        self.codigo_de_barras = codigo_de_barras
         self.tela_calculo_venda()
         self.preencher_campos_composicao()
     def calcular_preco_venda(self):
@@ -50,7 +51,7 @@ class CalculadoraPrecoVenda:
             self.label_composicao_preco.configure(text=f"Erro ao calcular a composição do preço: {str(e)}")
 
     def preencher_campos_composicao(self):
-        if (self.codigo_de_barra != 0):
+        if (self.codigo_de_barras != 0):
             query = """
                 SELECT percentual_custo_fixo, percentual_custo_operacional, percentual_imposto, 
                     percentual_comissao_venda, percentual_margem_lucro 
@@ -126,7 +127,7 @@ class CalculadoraPrecoVenda:
         self.criar_campos_entrada(frame)
         self.criar_botoes(frame)
         self.descricao(frame)
-
+        print(self.codigo_de_barras)
     def criar_campos_entrada(self, frame):
         # Frame para a primeira seção
         frame_secao1 = ctk.CTkFrame(frame)

@@ -39,7 +39,7 @@ class CadastrarProduto:
     def acessar_calculadora_preco_venda(self):
         # Função para acessar a calculadora de preço de venda
         self.root.withdraw()  # Oculta a janela principal
-        calculadora = CalculadoraPrecoVenda(self.root, self.entry_preco_venda_principal,self)
+        calculadora = CalculadoraPrecoVenda(self.root, self.entry_preco_venda_principal,self,0)
 
     def voltar_tela_principal(self):
         # Função para voltar à tela principal

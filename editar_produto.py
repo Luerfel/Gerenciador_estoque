@@ -64,10 +64,8 @@ class EditarProduto():
         button_editar.grid(row=0, column=3, sticky=tk.W, padx=5)
 
     def acessar_calculadora_preco_venda(self):
-        # Método para acessar a calculadora de preço de venda e ocultar a janela principal
-        self.root.withdraw()
-        calculadora = CalculadoraPrecoVenda(self.root, self.entry_preco_venda_principal, self)
-
+            self.root.withdraw()
+            CalculadoraPrecoVenda(self.root, self.entry_preco_venda_principal, self, self.codigo)
     def carregar_produtos(self):
         # Método para carregar produtos do banco de dados e exibí-los na treeview
         self.tree.delete(*self.tree.get_children())  # Limpa a treeview
