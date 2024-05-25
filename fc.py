@@ -1,5 +1,4 @@
 import os
-import random
 import customtkinter as ctk
 from tkinter import messagebox
 import tkinter as tk
@@ -18,7 +17,7 @@ def conectar_banco():
 # * **port:** Porta do serviço do banco de dados.
 
     try:
-        return oracledb.connect(user="SYSTEM", password="senha", host="localhost", port=1521)
+        return oracledb.connect(user="SYSTEM", password="senha", host="192.168.0.215", port=1521)
     except oracledb.DatabaseError as e:
         messagebox.showerror("Erro de conexão", f"Não foi possível conectar ao banco de dados: {e}")
         return None

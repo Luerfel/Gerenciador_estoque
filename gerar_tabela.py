@@ -22,7 +22,7 @@ import fc
 # * **sid:** SID (System Identifier) do banco de dados.
 
 
-connection = oracledb.connect (user="SYSTEM",password="senha",host="localhost",port=1521)
+connection = oracledb.connect (user="SYSTEM",password="senha",host="192.168.0.215",port=1521)
 cursor = connection.cursor()
 
 taxas = 1

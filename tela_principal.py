@@ -7,6 +7,7 @@ import subprocess
 from datetime import datetime
 import fc
 from tkcalendar import DateEntry
+from cp import HillCipher
 
 class MainScreen:
     """
@@ -21,6 +22,8 @@ class MainScreen:
             root_parameter (tk.Tk): A janela principal do aplicativo.
         """
         self.root = root_parameter
+        self.hill_cipher = HillCipher(fc.key_matriz())
+
         self.montar_tela_principal()
         self.ajustar_grid()
         self.buttons_design()
@@ -138,6 +141,7 @@ class MainScreen:
             resultado = self.cursor.fetchone()
             if resultado:
                 nome, preco_venda = resultado
+                nome = self.hill_cipher.decrypt(nome)
                 self.nome_entry.configure(state=tk.NORMAL)
                 self.unitario_entry.configure(state=tk.NORMAL)
                 self.nome_entry.delete(0, tk.END)
