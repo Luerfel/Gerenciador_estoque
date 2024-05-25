@@ -103,13 +103,17 @@ class ConsultarProduto():
         self.tree.bind("<Double-1>", self.abrir_janela_produto)
 
     def abrir_janela_produto(self, event):
-        item = self.tree.selection()[0]
+        selected_items = self.tree.selection()
+        if not selected_items:
+            messagebox.showerror("Erro", "Nenhum produto selecionado.")
+            return
+
+        item = selected_items[0]
         valores = self.tree.item(item, "values")
         codigo = valores[0]
 
         self.janela_produto = ctk.CTkToplevel(self.root)
         self.janela_produto.title("Detalhes do Produto")
-
         frame_detalhes = ctk.CTkFrame(self.janela_produto)
         frame_detalhes.pack(fill=ctk.BOTH, expand=True, padx=20, pady=20)
 
@@ -142,64 +146,102 @@ class ConsultarProduto():
             label_fornecedor = ctk.CTkLabel(frame_detalhes, text=f"Fornecedor: {fornecedor}")
             label_fornecedor.pack(anchor="w", pady=5)
 
-            # Busca a composição do preço
-            sql_composicao = """
-            SELECT percentual_custo_fixo, percentual_custo_operacional, percentual_imposto, percentual_comissao_venda, percentual_margem_lucro
-            FROM tbl_produto_composicao
-            WHERE codigo_de_barras = :CODIGO_DE_BARRAS
-            """
-            self.cursor.execute(sql_composicao, {"CODIGO_DE_BARRAS": codigo})
-            composicao = self.cursor.fetchone()
-            if composicao:
-                percentual_custo_fixo, percentual_custo_operacional, percentual_imposto, percentual_comissao_venda, percentual_margem_lucro = composicao
-
-                # Configuração do frame de descrição dos itens
-                descricao_frame = ctk.CTkFrame(frame_detalhes)
-                descricao_frame.pack(fill=ctk.BOTH, expand=True, padx=10, pady=10)
-
-                label_header_descricao = ctk.CTkLabel(descricao_frame, text="Composição do Preço")
-                label_header_descricao.grid(row=0, column=0, columnspan=2)
-
-                label_desc_preco_venda = ctk.CTkLabel(descricao_frame, text="A. Preço de Venda")
-                label_desc_preco_venda.grid(row=1, column=0)
-                label_val_preco_venda = ctk.CTkLabel(descricao_frame, text=f"{preco_de_venda}")
-                label_val_preco_venda.grid(row=1, column=1)
-
-                label_desc_custo_aquisicao = ctk.CTkLabel(descricao_frame, text="B. Custo de Aquisição")
-                label_desc_custo_aquisicao.grid(row=2, column=0)
-                label_val_custo_aquisicao = ctk.CTkLabel(descricao_frame, text=f"{preco_de_compra}")
-                label_val_custo_aquisicao.grid(row=2, column=1)
-
-                label_desc_custo_operacional = ctk.CTkLabel(descricao_frame, text="C. Custo Operacional")
-                label_desc_custo_operacional.grid(row=3, column=0)
-                label_val_custo_operacional = ctk.CTkLabel(descricao_frame, text=f"{percentual_custo_operacional}%")
-                label_val_custo_operacional.grid(row=3, column=1)
-
-                label_desc_custo_fixo = ctk.CTkLabel(descricao_frame, text="D. Custo Fixo")
-                label_desc_custo_fixo.grid(row=4, column=0)
-                label_val_custo_fixo = ctk.CTkLabel(descricao_frame, text=f"{percentual_custo_fixo}%")
-                label_val_custo_fixo.grid(row=4, column=1)
-
-                label_desc_impostos = ctk.CTkLabel(descricao_frame, text="E. Impostos")
-                label_desc_impostos.grid(row=5, column=0)
-                label_val_impostos = ctk.CTkLabel(descricao_frame, text=f"{percentual_imposto}%")
-                label_val_impostos.grid(row=5, column=1)
-
-                label_desc_margem_lucro = ctk.CTkLabel(descricao_frame, text="F. Margem de Lucro")
-                label_desc_margem_lucro.grid(row=6, column=0)
-                label_val_margem_lucro = ctk.CTkLabel(descricao_frame, text=f"{percentual_margem_lucro}%")
-                label_val_margem_lucro.grid(row=6, column=1)
-
-                label_desc_comissao_venda = ctk.CTkLabel(descricao_frame, text="G. Comissão de Venda")
-                label_desc_comissao_venda.grid(row=7, column=0)
-                label_val_comissao_venda = ctk.CTkLabel(descricao_frame, text=f"{percentual_comissao_venda}%")
-                label_val_comissao_venda.grid(row=7, column=1)
-            else:
-                messagebox.showerror("Erro", "Composição do preço não encontrada para este produto.")
+            # Chama a função para exibir a composição do preço
+            self.exibir_composicao_preco(frame_detalhes, codigo, preco_de_venda, preco_de_compra)
         else:
             messagebox.showerror("Erro", "Produto não encontrado.")
 
+    def exibir_composicao_preco(self, frame_detalhes, codigo, preco_de_venda, preco_de_compra):
+        # Busca a composição do preço
+        sql_composicao = """
+        SELECT percentual_custo_fixo, percentual_custo_operacional, percentual_imposto, percentual_comissao_venda, percentual_margem_lucro
+        FROM tbl_produto_composicao
+        WHERE codigo_de_barras = :CODIGO_DE_BARRAS
+        """
+        self.cursor.execute(sql_composicao, {"CODIGO_DE_BARRAS": codigo})
+        composicao = self.cursor.fetchone()
+        if composicao:
+            percentual_custo_fixo, percentual_custo_operacional, percentual_imposto, percentual_comissao_venda, percentual_margem_lucro = composicao
 
+            # Configuração do frame de descrição dos itens
+            descricao_frame = ctk.CTkFrame(frame_detalhes)
+            descricao_frame.pack(fill=ctk.BOTH, expand=True, padx=10, pady=10)
+
+            label_header_descricao = ctk.CTkLabel(descricao_frame, text="Composição do Preço")
+            label_header_descricao.grid(row=0, column=0, columnspan=2)
+
+            label_desc_preco_venda = ctk.CTkLabel(descricao_frame, text="A. Preço de Venda")
+            label_desc_preco_venda.grid(row=1, column=0)
+            label_val_preco_venda = ctk.CTkLabel(descricao_frame, text=f"R$ {preco_de_venda:.2f} (100%)")
+            label_val_preco_venda.grid(row=1, column=1)
+
+            percentual_custo_aquisicao = (preco_de_compra / preco_de_venda) * 100
+            label_desc_custo_aquisicao = ctk.CTkLabel(descricao_frame, text="B. Custo de Aquisição")
+            label_desc_custo_aquisicao.grid(row=2, column=0)
+            label_val_custo_aquisicao = ctk.CTkLabel(descricao_frame, text=f"R$ {preco_de_compra:.2f} ({percentual_custo_aquisicao:.2f}%)")
+            label_val_custo_aquisicao.grid(row=2, column=1)
+
+            valor_custo_operacional = preco_de_venda * percentual_custo_operacional / 100
+            label_desc_custo_operacional = ctk.CTkLabel(descricao_frame, text="C. Custo Operacional")
+            label_desc_custo_operacional.grid(row=3, column=0)
+            label_val_custo_operacional = ctk.CTkLabel(descricao_frame, text=f"R$ {valor_custo_operacional:.2f} ({percentual_custo_operacional}%)")
+            label_val_custo_operacional.grid(row=3, column=1)
+
+            valor_custo_fixo = preco_de_venda * percentual_custo_fixo / 100
+            label_desc_custo_fixo = ctk.CTkLabel(descricao_frame, text="D. Custo Fixo")
+            label_desc_custo_fixo.grid(row=4, column=0)
+            label_val_custo_fixo = ctk.CTkLabel(descricao_frame, text=f"R$ {valor_custo_fixo:.2f} ({percentual_custo_fixo}%)")
+            label_val_custo_fixo.grid(row=4, column=1)
+
+            valor_impostos = preco_de_venda * percentual_imposto / 100
+            label_desc_impostos = ctk.CTkLabel(descricao_frame, text="E. Impostos")
+            label_desc_impostos.grid(row=5, column=0)
+            label_val_impostos = ctk.CTkLabel(descricao_frame, text=f"R$ {valor_impostos:.2f} ({percentual_imposto}%)")
+            label_val_impostos.grid(row=5, column=1)
+
+            valor_margem_lucro = preco_de_venda * percentual_margem_lucro / 100
+            label_desc_margem_lucro = ctk.CTkLabel(descricao_frame, text="F. Margem de Lucro")
+            label_desc_margem_lucro.grid(row=6, column=0)
+            label_val_margem_lucro = ctk.CTkLabel(descricao_frame, text=f"R$ {valor_margem_lucro:.2f} ({percentual_margem_lucro}%)")
+            label_val_margem_lucro.grid(row=6, column=1)
+
+            valor_comissao_venda = preco_de_venda * percentual_comissao_venda / 100
+            label_desc_comissao_venda = ctk.CTkLabel(descricao_frame, text="G. Comissão de Venda")
+            label_desc_comissao_venda.grid(row=7, column=0)
+            label_val_comissao_venda = ctk.CTkLabel(descricao_frame, text=f"R$ {valor_comissao_venda:.2f} ({percentual_comissao_venda}%)")
+            label_val_comissao_venda.grid(row=7, column=1)
+
+            # Label para o status da margem de lucro
+            label_desc_status_lucro = ctk.CTkLabel(descricao_frame, text="Classificação do Lucro:")
+            label_desc_status_lucro.grid(row=8, column=0)
+            self.label_margem_lucro_status = ctk.CTkLabel(descricao_frame, text="")
+            self.label_margem_lucro_status.grid(row=8, column=1)
+
+            # Atualiza o status da margem de lucro
+            self.atualizar_status_margem_lucro(percentual_margem_lucro)
+        else:
+            messagebox.showerror("Erro", "Composição do preço não encontrada para este produto.")
+
+
+
+    def atualizar_status_margem_lucro(self, margem_lucro):
+        if margem_lucro >= 0 and margem_lucro <= 15:
+            status = "Baixo"
+            cor = "red"
+        elif margem_lucro > 15 and margem_lucro <= 30:
+            status = "Moderado"
+            cor = "orange"
+        elif margem_lucro > 30 and margem_lucro <= 45:
+            status = "Alto"
+            cor = "green"
+        elif margem_lucro > 45:
+            status = "Muito Alto"
+            cor = "blue"
+        else:
+            status = "Inválido"
+            cor = "black"
+
+        self.label_margem_lucro_status.configure(text=status, text_color=cor)
 
 # Executa a aplicação
 if __name__ == "__main__":
