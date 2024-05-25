@@ -65,7 +65,7 @@ class EditarProduto():
 
     def acessar_calculadora_preco_venda(self):
             self.root.withdraw()
-            CalculadoraPrecoVenda(self.root, self.entry_preco_venda_principal, self, self.codigo)
+            CalculadoraPrecoVenda(self.root, self.entry_preco_venda_principal, self, self.codigo,self.entry_custo_aquisicao)
     def carregar_produtos(self):
         # Método para carregar produtos do banco de dados e exibí-los na treeview
         self.tree.delete(*self.tree.get_children())  # Limpa a treeview

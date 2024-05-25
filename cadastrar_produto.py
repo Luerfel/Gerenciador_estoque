@@ -39,7 +39,7 @@ class CadastrarProduto:
     def acessar_calculadora_preco_venda(self):
         # Função para acessar a calculadora de preço de venda
         self.root.withdraw()  # Oculta a janela principal
-        calculadora = CalculadoraPrecoVenda(self.root, self.entry_preco_venda_principal,self,0)
+        calculadora = CalculadoraPrecoVenda(self.root, self.entry_preco_venda_principal,self,0,self.entry_custo_aquisicao)
 
     def voltar_tela_principal(self):
         # Função para voltar à tela principal
@@ -185,15 +185,17 @@ class CadastrarProduto:
             })
             # Inserção na tabela tbl_produto_composicao
             self.cursor.execute("""
-            INSERT INTO tbl_produto_composicao (codigo_de_barras, percentual_custo_fixo, percentual_custo_operacional, percentual_imposto, percentual_comissao_venda, percentual_margem_lucro)
-            VALUES (:codigo_de_barras, :percentual_custo_fixo, :percentual_custo_operacional, :percentual_imposto, :percentual_comissao_venda, :percentual_margem_lucro)
+            INSERT INTO tbl_produto_composicao (codigo_de_barras, percentual_custo_fixo, percentual_custo_operacional, percentual_imposto, percentual_comissao_venda, percentual_margem_lucro, preco_de_compra, preco_de_venda)
+            VALUES (:codigo_de_barras, :percentual_custo_fixo, :percentual_custo_operacional, :percentual_imposto, :percentual_comissao_venda, :percentual_margem_lucro, :preco_de_compra, :preco_de_venda)
             """, {
                 'codigo_de_barras': self.codigo_de_barras,
                 'percentual_custo_fixo': percentual_custo_fixo,
                 'percentual_custo_operacional': percentual_custo_operacional,
                 'percentual_imposto': percentual_imposto,
                 'percentual_comissao_venda': percentual_comissao_venda,
-                'percentual_margem_lucro': percentual_margem_lucro
+                'percentual_margem_lucro': percentual_margem_lucro,
+                'preco_de_compra': preco_de_compra,
+                'preco_de_venda': preco_de_venda
             })
 
             self.connection.commit()  # Confirma a transação

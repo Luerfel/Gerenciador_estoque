@@ -5,11 +5,12 @@ import fc
 
 
 class CalculadoraPrecoVenda:
-    def __init__(self, root, entry_preco_venda_principal, cadastro_produto, codigo_de_barras):
+    def __init__(self, root, entry_preco_venda_principal, cadastro_produto, codigo_de_barras,entry_custo_aquisicao):
 
         self.root = root
         self.root.title("Calculadora de Preço de Venda")
         self.entry_preco_venda_principal = entry_preco_venda_principal
+        self.entry_custo_aquisicao = entry_custo_aquisicao
         self.connection = fc.conectar_banco()
         self.cursor = self.connection.cursor()
         self.cadastro_produto = cadastro_produto
@@ -21,7 +22,7 @@ class CalculadoraPrecoVenda:
         self.label_composicao_preco.configure(text="")
 
         try:
-            ca = float(self.entry_custo_produto.get())
+            ca = float(self.entry_custo_aquisicao1.get())
             iv = float(self.entry_custo_imposto.get())
             cf = float(self.entry_percentual_custo_fixo.get())
             co = float(self.entry_percentual_custo_operacional.get())
@@ -51,10 +52,10 @@ class CalculadoraPrecoVenda:
             self.label_composicao_preco.configure(text=f"Erro ao calcular a composição do preço: {str(e)}")
 
     def preencher_campos_composicao(self):
-        if (self.codigo_de_barras != 0):
+        if self.codigo_de_barras != 0:
             query = """
                 SELECT percentual_custo_fixo, percentual_custo_operacional, percentual_imposto, 
-                    percentual_comissao_venda, percentual_margem_lucro 
+                    percentual_comissao_venda, percentual_margem_lucro, preco_de_compra, preco_de_venda
                 FROM tbl_produto_composicao 
                 WHERE codigo_de_barras = :codigo_de_barras
             """
@@ -64,33 +65,35 @@ class CalculadoraPrecoVenda:
             if result:
                 self.entry_percentual_custo_fixo.configure(state="normal")
                 self.entry_percentual_custo_operacional.configure(state="normal")
-                self.entry_custo_imposto.configure(state="normal")
-                self.entry_comissao_venda.configure(state="normal")
-                self.entry_margem_lucro.configure(state="normal")
+                self.entry_custo_aquisicao1.configure(state="normal")
+                self.entry_preco_venda.configure(state="normal")
+
 
                 self.entry_percentual_custo_fixo.delete(0, tk.END)
                 self.entry_percentual_custo_operacional.delete(0, tk.END)
                 self.entry_custo_imposto.delete(0, tk.END)
                 self.entry_comissao_venda.delete(0, tk.END)
                 self.entry_margem_lucro.delete(0, tk.END)
+                self.entry_custo_aquisicao1.delete(0, tk.END)
+                self.entry_preco_venda.delete(0, tk.END)
+
 
                 self.entry_percentual_custo_fixo.insert(0, str(result[0]))
                 self.entry_percentual_custo_operacional.insert(0, str(result[1]))
                 self.entry_custo_imposto.insert(0, str(result[2]))
                 self.entry_comissao_venda.insert(0, str(result[3]))
                 self.entry_margem_lucro.insert(0, str(result[4]))
+                self.entry_custo_aquisicao1.insert(0, str(result[5]))
+                self.entry_preco_venda.insert(0, str(result[6]))
 
-                self.entry_percentual_custo_fixo.configure(state="readonly")
-                self.entry_percentual_custo_operacional.configure(state="readonly")
-                self.entry_custo_imposto.configure(state="readonly")
-                self.entry_comissao_venda.configure(state="readonly")
-                self.entry_margem_lucro.configure(state="readonly")
+                self.entry_preco_venda.configure(state="readonly")
 
     def atualizar_preco_venda(self, preco):
         self.entry_preco_venda.configure(state="normal")
         self.entry_preco_venda.delete(0, tk.END)
         self.entry_preco_venda.insert(0, "{:.2f}".format(preco) if isinstance(preco, float) else preco)
         self.entry_preco_venda.configure(state="readonly")
+
 
     def atualizar_descricao(self, preco_venda, composicao):
             self.label_val_preco_venda.configure(text=f"R$ {preco_venda:.2f}")
@@ -127,7 +130,6 @@ class CalculadoraPrecoVenda:
         self.criar_campos_entrada(frame)
         self.criar_botoes(frame)
         self.descricao(frame)
-        print(self.codigo_de_barras)
     def criar_campos_entrada(self, frame):
         # Frame para a primeira seção
         frame_secao1 = ctk.CTkFrame(frame)
@@ -182,10 +184,10 @@ class CalculadoraPrecoVenda:
         self.entry_custo_imposto.grid(row=5, column=1, sticky=tk.W, pady=2, padx=2)
 
         # Custo do Produto
-        label_custo_produto = ctk.CTkLabel(frame_secao1, text="Custo do Produto:")
-        label_custo_produto.grid(row=6, column=0, sticky=tk.W, pady=2, padx=2)
-        self.entry_custo_produto = ctk.CTkEntry(frame_secao1, width=100)
-        self.entry_custo_produto.grid(row=6, column=1, sticky=tk.W, pady=2, padx=2)
+        label_custo_aquisicao = ctk.CTkLabel(frame_secao1, text="Custo do Produto:")
+        label_custo_aquisicao.grid(row=6, column=0, sticky=tk.W, pady=2, padx=2)
+        self.entry_custo_aquisicao1 = ctk.CTkEntry(frame_secao1, width=100)
+        self.entry_custo_aquisicao1.grid(row=6, column=1, sticky=tk.W, pady=2, padx=2)
 
         # Percentual da Comissão de Venda
         label_comissao_venda = ctk.CTkLabel(frame_secao1, text="Percentual da Comissão de Venda:")
@@ -248,8 +250,14 @@ class CalculadoraPrecoVenda:
         self.entry_preco_venda_principal.configure(state="normal")
         self.entry_preco_venda_principal.delete(0, tk.END)
         self.entry_preco_venda_principal.insert(0, preco_venda)
-        self.entry_preco_venda_principal.configure(state="readonly")
-        
+
+        # Salva o custo de aquisição
+        custo_aquisicao = self.entry_custo_aquisicao1.get()
+        self.entry_custo_aquisicao.configure(state="normal")
+        self.entry_custo_aquisicao.delete(0, tk.END)
+        self.entry_custo_aquisicao.insert(0, custo_aquisicao)
+        self.entry_custo_aquisicao.configure(state="readonly")
+            
         # Atualiza os percentuais na instância de CadastrarProduto ou editar_produto
         self.cadastro_produto.percentual_custo_fixo = float(self.entry_percentual_custo_fixo.get())
         self.cadastro_produto.percentual_custo_operacional = float(self.entry_percentual_custo_operacional.get())

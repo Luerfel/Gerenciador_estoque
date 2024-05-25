@@ -1,7 +1,7 @@
-import tkinter as tk  # Biblioteca padrão do Tkinter para a criação de interfaces gráficas
-import customtkinter as ctk  # Biblioteca customizada para estilização do Tkinter
-from tkinter import ttk, messagebox  # Importa componentes adicionais do Tkinter
-import oracledb  # Biblioteca para conectar-se ao banco de dados Oracle
+import tkinter as tk  
+import customtkinter as ctk  
+from tkinter import ttk, messagebox  
+import oracledb  
 import fc
 from cp import HillCipher
 import numpy as np
@@ -9,7 +9,7 @@ import numpy as np
 
 
 
-# Classe para a janela de consulta de produtos
+
 class ConsultarProduto():
     def __init__(self, root_parameter):
         self.root = root_parameter  # Janela principal da aplicação
@@ -25,8 +25,7 @@ class ConsultarProduto():
             self.root.destroy()
         self.root.mainloop()  # Inicia o loop principal da interface gráfica
 
-    # Método para carregar os produtos do banco de dados na árvore de visualização
-    # Método para carregar os produtos do banco de dados na árvore de visualização
+
     def carregar_produtos(self):
         sql = "SELECT codigo_de_barras, nome, descricao, preco_de_compra, preco_de_venda, fornecedor, unidades FROM tbl_produtos"
         self.cursor.execute(sql)  # Executa o comando SQL
