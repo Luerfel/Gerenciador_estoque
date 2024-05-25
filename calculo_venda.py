@@ -337,7 +337,7 @@ class CalculadoraPrecoVenda:
         label_header_percentual = ctk.CTkLabel(self.descricao_subframe, text="%")
         label_header_percentual.grid(row=0, column=1, padx=16, pady=3)
 
-        self.label_perc_preco_venda = ctk.CTkLabel(self.descricao_subframe, text="0.00%")
+        self.label_perc_preco_venda = ctk.CTkLabel(self.descricao_subframe, text="100%")
         self.label_perc_preco_venda.grid(row=1, column=1, padx=16, pady=3)
 
         self.label_perc_custo_aquisicao = ctk.CTkLabel(self.descricao_subframe, text="0.00%")
