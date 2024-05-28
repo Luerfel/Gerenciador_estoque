@@ -10,6 +10,7 @@ class EditarProduto():
     def __init__(self, root_parameter):
         self.root = root_parameter
         self.root.title("Editar Produto")
+        self.root.geometry("600x300")
         self.root.resizable(False, False)
         self.codigo = None  # Armazena o código do produto que está sendo editado
         self.connection = fc.conectar_banco()
@@ -205,8 +206,8 @@ class EditarProduto():
                 self.connection.commit()
                 messagebox.showinfo("Sucesso", "Produto atualizado com sucesso.")
                 self.carregar_produtos()
-                self.limpar_campos()
                 self.codigo = None
+                self.root.destroy()
             except Exception as e:
                 messagebox.showerror("Erro", f"Erro ao atualizar o produto: {e}")
         else:
