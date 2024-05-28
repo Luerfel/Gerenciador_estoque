@@ -46,6 +46,12 @@ class HillCipher:
             text = text[:index] + ' ' + text[index:]
         return text
 
+    def pad_text(self, text_numbers):
+        # Adiciona 'X' ao final do texto se o tamanho não for múltiplo do tamanho da matriz chave
+        while len(text_numbers) % self.matrix_size != 0:
+            text_numbers.append(ord('X') - ord('A'))
+        return text_numbers
+
     def encrypt(self, plaintext):
         # Preprocessa o texto claro para remover caracteres não alfabéticos e armazena espaços
         plaintext, spaces = self.preprocess_text(plaintext)
@@ -53,9 +59,8 @@ class HillCipher:
         # Converte cada letra do texto claro para um número (A=0, B=1, ..., Z=25)
         plaintext_numbers = [ord(char) - ord('A') for char in plaintext]
         
-        # Adiciona 'X' ao final do texto claro se o tamanho não for múltiplo do tamanho da matriz chave
-        while len(plaintext_numbers) % self.matrix_size != 0:
-            plaintext_numbers.append(ord('X') - ord('A'))
+        # Adiciona padding se necessário
+        plaintext_numbers = self.pad_text(plaintext_numbers)
         
         # Converte a lista de números para uma matriz
         plaintext_matrix = np.array(plaintext_numbers).reshape(-1, self.matrix_size)
@@ -76,6 +81,9 @@ class HillCipher:
         
         # Converte cada letra do texto cifrado para um número (A=0, B=1, ..., Z=25)
         ciphertext_numbers = [ord(char) - ord('A') for char in ciphertext]
+
+        # Adiciona padding se necessário
+        ciphertext_numbers = self.pad_text(ciphertext_numbers)
         
         # Converte a lista de números para uma matriz
         ciphertext_matrix = np.array(ciphertext_numbers).reshape(-1, self.matrix_size)
@@ -93,20 +101,18 @@ class HillCipher:
         plaintext = self.reinsert_spaces(plaintext, spaces)
         return plaintext
 
-"""
 # Exemplo de uso
-key_matrix_2x2 = [
-    [3, 3],
-    [2, 5]
-]
+# key_matrix_2x2 = [
+#     [3, 3],
+#     [2, 5]
+# ]
 
-cipher = HillCipher(key_matrix_2x2)
+# cipher = HillCipher(key_matrix_2x2)
 
-# Testando criptografia e descriptografia
-plaintext = "HELLO world"
-ciphertext = cipher.encrypt(plaintext)
-print(f"Ciphertext: {ciphertext}")
+# # Testando criptografia e descriptografia
+# plaintext = "HELLO world"
+# ciphertext = cipher.encrypt(plaintext)
+# print(f"Ciphertext: {ciphertext}")
 
-decrypted_text = cipher.decrypt(ciphertext)
-print(f"Decrypted text: {decrypted_text}")
-"""
+# decrypted_text = cipher.decrypt(ciphertext)
+# print(f"Decrypted text: {decrypted_text}")
