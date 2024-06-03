@@ -22,7 +22,7 @@ import fc
 # * **sid:** SID (System Identifier) do banco de dados.
 
 
-connection = oracledb.connect (user="SYSTEM",password="senha",host="192.168.0.215",port=1521)
+connection = oracledb.connect (user="SYSTEM",password="senha",host="localhost",port=1521)
 cursor = connection.cursor()
 
 taxas = 1
@@ -112,16 +112,17 @@ def criar_tabela():
         )
         """)
         print("Tabela TBL_FORNECEDORES criada com sucesso!!")
-#CREATE TABLE tbl_produto_composicao (
- #   codigo_de_barras NVARCHAR2(13) PRIMARY KEY,
-  #  percentual_custo_fixo NUMBER(5, 2),
-   # percentual_custo_operacional NUMBER(5, 2),
-   # percentual_imposto NUMBER(5, 2),
-   # percentual_comissao_venda NUMBER(5, 2),
-   # percentual_margem_lucro NUMBER(5, 2),
-   # FOREIGN KEY (codigo_de_barras) REFERENCES tbl_produtos(codigo_de_barras)
-#);
-        # Salva as alterações no banco de dados
+        cursor.execute("""
+            CREATE TABLE tbl_produto_composicao (
+                codigo_de_barras NVARCHAR2(13) PRIMARY KEY,
+                percentual_custo_fixo NUMBER(5, 2),
+                percentual_custo_operacional NUMBER(5, 2),
+                percentual_imposto NUMBER(5, 2),
+                percentual_comissao_venda NUMBER(5, 2),
+                percentual_margem_lucro NUMBER(5, 2),
+                FOREIGN KEY (codigo_de_barras) REFERENCES tbl_produtos(codigo_de_barras)
+            )
+        """)
         connection.commit()
 
     except oracledb.DatabaseError as e:
