@@ -15,8 +15,4 @@ pip install numpy
 
 ao acessar o programa pela primeira vez, crie as tabelas com o arquivo GerarTabela.py
 
-## Os Arquivos que precisam ser executados são esses :
-
-CadastrarProduto.py
-EditarProduto.py
-ExcluirProduto.py
+## O Unico arquivo que precisa ser executado é o tela_principal.py
