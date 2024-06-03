@@ -17,7 +17,11 @@ def conectar_banco():
 # * **port:** Porta do serviço do banco de dados.
 
     try:
+<<<<<<< HEAD
         return oracledb.connect(user="SYSTEM", password="senha", host="localhost", port=1521)
+=======
+        return oracledb.connect(user="SYSTEM", password="testador", host="localhost", port=1521)
+>>>>>>> ba1a89868983088ee1f0abe5dc1bd884927fa9d5
     except oracledb.DatabaseError as e:
         messagebox.showerror("Erro de conexão", f"Não foi possível conectar ao banco de dados: {e}")
         return None
