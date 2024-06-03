@@ -49,7 +49,6 @@ def main ():
         if opcao == 1:
             criar_tabela()
         elif opcao == 2:
-        elif opcao == 0:
             print("Saindo do programa...")
             return
         else:
