@@ -38,7 +38,6 @@ def main ():
         repeticao = 1
         print("\n--- Menu de Cadastro de Produtos ---")
         print("1. Criar Tabela")
-        print("2. Preencher Tabela")
         print("0. Sair do programa!")
         while repeticao == 1:
             try:
@@ -50,7 +49,6 @@ def main ():
         if opcao == 1:
             criar_tabela()
         elif opcao == 2:
-            preencher_tabela()
         elif opcao == 0:
             print("Saindo do programa...")
             return
